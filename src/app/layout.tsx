@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { inter } from '@/app/ui/fonts';
+import ThemeRegistry from '@/app/components/ThemeRegistry';
+import AppBarComponent from '@/app/components/AppBar';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,7 +31,10 @@ export default function RootLayout({
         // className={`${inter.className} ${geistSans.variable} ${geistMono.variable} antialiased`}
         className={`${inter.className} antialiased`}
       >
-        {children}
+        <ThemeRegistry>
+          <AppBarComponent />
+          {children}
+        </ThemeRegistry>
       </body>
     </html>
   );

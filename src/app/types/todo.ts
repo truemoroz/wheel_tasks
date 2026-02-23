@@ -1,0 +1,16 @@
+export interface Task {
+  id: string;
+  title: string;
+  completed: boolean;
+}
+export interface Goal {
+  id: string;
+  title: string;
+}
+export interface LifeSphereGroup {
+  id: string;
+  name: string;
+  rating: number;
+  goals: Goal[];
+  tasks: Task[];
+}
