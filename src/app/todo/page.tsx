@@ -4,7 +4,7 @@ import Box from '@mui/material/Box';
 import SphereList from '@/app/components/SphereList';
 export default function TodoPage() {
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
+    <Container maxWidth="xl" sx={{ py: 4 }}>
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" fontWeight="bold" gutterBottom>
           Wheel of Life

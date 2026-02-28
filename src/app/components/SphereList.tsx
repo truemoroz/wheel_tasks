@@ -1,8 +1,13 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
 import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { LifeSphereGroup } from '@/app/types/todo';
 import SphereGroup from '@/app/components/SphereGroup';
 
@@ -14,6 +19,7 @@ export default function SphereList() {
   const [spheres, setSpheres] = useState<LifeSphereGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [goalsCollapsed, setGoalsCollapsed] = useState(false);
 
   useEffect(() => {
     fetch('/api/spheres')
@@ -154,20 +160,75 @@ export default function SphereList() {
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      {sortedSpheres.map((group) => (
-        <SphereGroup
-          key={group.id}
-          group={group}
-          onRatingChange={handleRatingChange}
-          onNameChange={handleNameChange}
-          onTaskToggle={handleTaskToggle}
-          onTaskAdd={handleTaskAdd}
-          onTaskDelete={handleTaskDelete}
-          onGoalAdd={handleGoalAdd}
-          onGoalDelete={handleGoalDelete}
-        />
-      ))}
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: {
+          xs: '1fr',
+          lg: goalsCollapsed ? '40px 1fr' : '1fr 1fr',
+        },
+        gap: 2,
+        alignItems: 'start',
+        transition: 'grid-template-columns 0.3s ease',
+      }}
+    >
+      {/* Goals column */}
+      <Box sx={{ minWidth: 0 }}>
+        <Box sx={{ mb: 1, px: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+          {!goalsCollapsed && (
+            <Typography variant="h6" fontWeight="bold" sx={{ flexGrow: 1 }}>
+              Goals
+            </Typography>
+          )}
+          <Tooltip title={goalsCollapsed ? 'Expand goals' : 'Collapse goals'}>
+            <IconButton size="small" onClick={() => setGoalsCollapsed((v) => !v)}>
+              {goalsCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+            </IconButton>
+          </Tooltip>
+        </Box>
+        {!goalsCollapsed && (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {sortedSpheres.map((group) => (
+              <SphereGroup
+                key={group.id}
+                group={group}
+                view="goals"
+                onRatingChange={handleRatingChange}
+                onNameChange={handleNameChange}
+                onTaskToggle={handleTaskToggle}
+                onTaskAdd={handleTaskAdd}
+                onTaskDelete={handleTaskDelete}
+                onGoalAdd={handleGoalAdd}
+                onGoalDelete={handleGoalDelete}
+              />
+            ))}
+          </Box>
+        )}
+      </Box>
+      {/* Tasks column */}
+      <Box>
+        <Box sx={{ mb: 1, px: 1 }}>
+          <Typography variant="h6" fontWeight="bold">
+            Tasks
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          {sortedSpheres.map((group) => (
+            <SphereGroup
+              key={group.id}
+              group={group}
+              view="tasks"
+              onRatingChange={handleRatingChange}
+              onNameChange={handleNameChange}
+              onTaskToggle={handleTaskToggle}
+              onTaskAdd={handleTaskAdd}
+              onTaskDelete={handleTaskDelete}
+              onGoalAdd={handleGoalAdd}
+              onGoalDelete={handleGoalDelete}
+            />
+          ))}
+        </Box>
+      </Box>
     </Box>
   );
 }

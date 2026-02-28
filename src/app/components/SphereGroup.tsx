@@ -39,6 +39,8 @@ interface SphereGroupProps {
   onTaskDelete: (groupId: string, taskId: string) => void;
   onGoalAdd: (groupId: string, title: string) => void;
   onGoalDelete: (groupId: string, goalId: string) => void;
+  /** Which section to render. Defaults to 'full'. */
+  view?: 'full' | 'goals' | 'tasks';
 }
 
 export default function SphereGroup({
@@ -50,6 +52,7 @@ export default function SphereGroup({
   onTaskDelete,
   onGoalAdd,
   onGoalDelete,
+  view = 'full',
 }: SphereGroupProps) {
   const [newTask, setNewTask] = useState('');
   const [newGoal, setNewGoal] = useState('');
@@ -176,102 +179,112 @@ export default function SphereGroup({
         </Box>
       </AccordionSummary>
       <AccordionDetails>
-        {/* Rating Slider */}
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle2" gutterBottom>
-            Current State Rating
-          </Typography>
-          <Slider
-            value={group.rating}
-            min={1}
-            max={10}
-            step={1}
-            marks
-            valueLabelDisplay="auto"
-            onChange={(_, value) => onRatingChange(group.id, value as number)}
-          />
-        </Box>
-        <Divider sx={{ mb: 2 }} />
+        {/* Rating Slider — only in full view */}
+        {view === 'full' && (
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Current State Rating
+            </Typography>
+            <Slider
+              value={group.rating}
+              min={1}
+              max={10}
+              step={1}
+              marks
+              valueLabelDisplay="auto"
+              onChange={(_, value) => onRatingChange(group.id, value as number)}
+            />
+          </Box>
+        )}
+        {view === 'full' && <Divider sx={{ mb: 2 }} />}
         {/* Goals */}
-        <Typography variant="subtitle2" gutterBottom>
-          Goals
-        </Typography>
-        <List dense>
-          {group.goals.map((goal) => (
-            <ListItem
-              key={goal.id}
-              secondaryAction={
-                <IconButton edge="end" size="small" onClick={() => onGoalDelete(group.id, goal.id)}>
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              }
-            >
-              <ListItemIcon sx={{ minWidth: 32 }}>
-                <FlagIcon fontSize="small" color="primary" />
-              </ListItemIcon>
-              <ListItemText primary={goal.title} />
-            </ListItem>
-          ))}
-        </List>
-        <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-          <TextField
-            size="small"
-            placeholder="Add a goal..."
-            value={newGoal}
-            onChange={(e) => setNewGoal(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAddGoal()}
-            fullWidth
-          />
-          <IconButton color="primary" onClick={handleAddGoal}>
-            <AddIcon />
-          </IconButton>
-        </Box>
-        <Divider sx={{ mb: 2 }} />
-        {/* Tasks */}
-        <Typography variant="subtitle2" gutterBottom>
-          Tasks
-        </Typography>
-        <List dense>
-          {group.tasks.map((task) => (
-            <ListItem
-              key={task.id}
-              secondaryAction={
-                <IconButton edge="end" size="small" onClick={() => onTaskDelete(group.id, task.id)}>
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              }
-            >
-              <ListItemIcon sx={{ minWidth: 32 }}>
-                <Checkbox
-                  edge="start"
-                  checked={task.completed}
-                  onChange={() => onTaskToggle(group.id, task.id)}
-                  size="small"
-                />
-              </ListItemIcon>
-              <ListItemText
-                primary={task.title}
-                sx={{
-                  textDecoration: task.completed ? 'line-through' : 'none',
-                  opacity: task.completed ? 0.6 : 1,
-                }}
+        {(view === 'full' || view === 'goals') && (
+          <>
+            <Typography variant="subtitle2" gutterBottom>
+              Goals
+            </Typography>
+            <List dense>
+              {group.goals.map((goal) => (
+                <ListItem
+                  key={goal.id}
+                  secondaryAction={
+                    <IconButton edge="end" size="small" onClick={() => onGoalDelete(group.id, goal.id)}>
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  }
+                >
+                  <ListItemIcon sx={{ minWidth: 32 }}>
+                    <FlagIcon fontSize="small" color="primary" />
+                  </ListItemIcon>
+                  <ListItemText primary={goal.title} />
+                </ListItem>
+              ))}
+            </List>
+            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+              <TextField
+                size="small"
+                placeholder="Add a goal..."
+                value={newGoal}
+                onChange={(e) => setNewGoal(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddGoal()}
+                fullWidth
               />
-            </ListItem>
-          ))}
-        </List>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <TextField
-            size="small"
-            placeholder="Add a task..."
-            value={newTask}
-            onChange={(e) => setNewTask(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
-            fullWidth
-          />
-          <IconButton color="primary" onClick={handleAddTask}>
-            <AddIcon />
-          </IconButton>
-        </Box>
+              <IconButton color="primary" onClick={handleAddGoal}>
+                <AddIcon />
+              </IconButton>
+            </Box>
+          </>
+        )}
+        {view === 'full' && <Divider sx={{ mb: 2 }} />}
+        {/* Tasks */}
+        {(view === 'full' || view === 'tasks') && (
+          <>
+            <Typography variant="subtitle2" gutterBottom>
+              Tasks
+            </Typography>
+            <List dense>
+              {group.tasks.map((task) => (
+                <ListItem
+                  key={task.id}
+                  secondaryAction={
+                    <IconButton edge="end" size="small" onClick={() => onTaskDelete(group.id, task.id)}>
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  }
+                >
+                  <ListItemIcon sx={{ minWidth: 32 }}>
+                    <Checkbox
+                      edge="start"
+                      checked={task.completed}
+                      onChange={() => onTaskToggle(group.id, task.id)}
+                      size="small"
+                    />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={task.title}
+                    sx={{
+                      textDecoration: task.completed ? 'line-through' : 'none',
+                      opacity: task.completed ? 0.6 : 1,
+                    }}
+                  />
+                </ListItem>
+              ))}
+            </List>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <TextField
+                size="small"
+                placeholder="Add a task..."
+                value={newTask}
+                onChange={(e) => setNewTask(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
+                fullWidth
+              />
+              <IconButton color="primary" onClick={handleAddTask}>
+                <AddIcon />
+              </IconButton>
+            </Box>
+          </>
+        )}
       </AccordionDetails>
     </Accordion>
   );
