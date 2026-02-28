@@ -6,8 +6,11 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
+import Collapse from '@mui/material/Collapse';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { LifeSphereGroup } from '@/app/types/todo';
 import SphereGroup from '@/app/components/SphereGroup';
 import WheelOfLife from "@/app/components/WheelOfLife";
@@ -21,6 +24,7 @@ export default function SphereList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [goalsCollapsed, setGoalsCollapsed] = useState(false);
+  const [wheelCollapsed, setWheelCollapsed] = useState(false);
 
   useEffect(() => {
     fetch('/api/spheres')
@@ -162,7 +166,31 @@ export default function SphereList() {
 
   return (
     <>
-      <WheelOfLife spheres={sortedSpheres} />
+      <Box sx={{ mb: 1 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            cursor: 'pointer',
+            userSelect: 'none',
+            width: 'fit-content',
+            gap: 0.5,
+          }}
+          onClick={() => setWheelCollapsed((v) => !v)}
+        >
+          <Typography variant="subtitle2" color="text.secondary">
+            Wheel of Life
+          </Typography>
+          <Tooltip title={wheelCollapsed ? 'Expand diagram' : 'Collapse diagram'}>
+            <IconButton size="small">
+              {wheelCollapsed ? <ExpandMoreIcon fontSize="small" /> : <ExpandLessIcon fontSize="small" />}
+            </IconButton>
+          </Tooltip>
+        </Box>
+        <Collapse in={!wheelCollapsed}>
+          <WheelOfLife spheres={sortedSpheres} />
+        </Collapse>
+      </Box>
       <Box
         sx={{
           display: 'grid',

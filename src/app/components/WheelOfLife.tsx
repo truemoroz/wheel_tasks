@@ -1,7 +1,6 @@
 'use client';
 import { useMemo } from 'react';
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 import { LifeSphereGroup } from '@/app/types/todo';
 
@@ -13,6 +12,7 @@ const SIZE = 360;
 const CENTER = SIZE / 2;
 const MAX_RADIUS = CENTER - 48; // leave room for labels
 const LEVELS = 10;
+
 
 function polarToCartesian(angleDeg: number, radius: number): [number, number] {
   const rad = ((angleDeg - 90) * Math.PI) / 180;
@@ -94,11 +94,8 @@ export default function WheelOfLife({ spheres }: WheelOfLifeProps) {
   if (count === 0) return null;
 
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
       <Box sx={{ textAlign: 'center' }}>
-        <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-          Wheel of Life
-        </Typography>
         <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} style={{ display: 'block' }}>
           {/* Background circle */}
           <circle

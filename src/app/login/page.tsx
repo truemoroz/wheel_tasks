@@ -11,6 +11,7 @@ import Alert from '@mui/material/Alert';
 import Paper from '@mui/material/Paper';
 import Link from 'next/link';
 import CircularProgress from '@mui/material/CircularProgress';
+// TODO add login with Google and Apple
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
