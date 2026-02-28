@@ -179,8 +179,8 @@ export default function SphereGroup({
         </Box>
       </AccordionSummary>
       <AccordionDetails>
-        {/* Rating Slider — only in full view */}
-        {view === 'full' && (
+        {/* Rating Slider */}
+        {(view === 'full' || view === 'goals') && (
           <Box sx={{ mb: 3 }}>
             <Typography variant="subtitle2" gutterBottom>
               Current State Rating
@@ -196,7 +196,7 @@ export default function SphereGroup({
             />
           </Box>
         )}
-        {view === 'full' && <Divider sx={{ mb: 2 }} />}
+        {(view === 'full' || view === 'goals') && <Divider sx={{ mb: 2 }} />}
         {/* Goals */}
         {(view === 'full' || view === 'goals') && (
           <>
