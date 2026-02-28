@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Sphere from '@/lib/models/Sphere';
+import { auth } from '@/auth';
 
 interface RouteParams {
   params: Promise<{ id: string; taskId: string }>;
@@ -8,11 +9,14 @@ interface RouteParams {
 
 export async function PATCH(request: Request, { params }: RouteParams) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     await connectToDatabase();
     const { id, taskId } = await params;
     const body = await request.json();
 
-    const sphere = await Sphere.findOne({ id });
+    const sphere = await Sphere.findOne({ id, userId: session.user.id });
     if (!sphere) return NextResponse.json({ error: 'Sphere not found' }, { status: 404 });
 
     const task = sphere.tasks.find((t) => t.id === taskId);
@@ -31,10 +35,13 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
 export async function DELETE(_request: Request, { params }: RouteParams) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     await connectToDatabase();
     const { id, taskId } = await params;
     const sphere = await Sphere.findOneAndUpdate(
-      { id },
+      { id, userId: session.user.id },
       { $pull: { tasks: { id: taskId } } },
       { new: true },
     ).lean();
@@ -45,4 +52,6 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: 'Failed to delete task' }, { status: 500 });
   }
 }
+
+
 

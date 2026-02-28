@@ -4,6 +4,7 @@ import "./globals.css";
 import { inter } from '@/app/ui/fonts';
 import ThemeRegistry from '@/app/components/ThemeRegistry';
 import AppBarComponent from '@/app/components/AppBar';
+import AuthProvider from '@/app/components/AuthProvider';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,8 +33,10 @@ export default function RootLayout({
         className={`${inter.className} antialiased`}
       >
         <ThemeRegistry>
-          <AppBarComponent />
-          {children}
+          <AuthProvider>
+            <AppBarComponent />
+            {children}
+          </AuthProvider>
         </ThemeRegistry>
       </body>
     </html>

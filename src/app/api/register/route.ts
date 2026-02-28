@@ -1,0 +1,34 @@
+import { NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
+import { connectToDatabase } from '@/lib/mongodb';
+import User from '@/lib/models/User';
+import Sphere from '@/lib/models/Sphere';
+import { initialSpheres } from '@/app/data/initialSpheres';
+export async function POST(request: Request) {
+  try {
+    const { email, password } = await request.json();
+    if (!email || !password) {
+      return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
+    }
+    if (password.length < 6) {
+      return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });
+    }
+    await connectToDatabase();
+    const existing = await User.findOne({ email: email.toLowerCase() });
+    if (existing) {
+      return NextResponse.json({ error: 'Email already in use' }, { status: 409 });
+    }
+    const hashed = await bcrypt.hash(password, 12);
+    const user = await User.create({ email: email.toLowerCase(), password: hashed });
+    const seeded = initialSpheres.map((s) => ({
+      ...s,
+      id: `${user._id}-${s.id}`,
+      userId: user._id.toString(),
+    }));
+    await Sphere.insertMany(seeded);
+    return NextResponse.json({ success: true }, { status: 201 });
+  } catch (error) {
+    console.error('POST /api/register error:', error);
+    return NextResponse.json({ error: 'Registration failed' }, { status: 500 });
+  }
+}

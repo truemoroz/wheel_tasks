@@ -8,11 +8,15 @@ import Button from '@mui/material/Button';
 import MenuIcon from '@mui/icons-material/Menu';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
+import LogoutIcon from '@mui/icons-material/Logout';
 import { useColorMode } from '@/app/components/ColorModeContext';
 import Link from 'next/link';
+import { useSession, signOut } from 'next-auth/react';
+import Tooltip from '@mui/material/Tooltip';
 
 export default function AppBarComponent() {
     const { mode, toggleColorMode } = useColorMode();
+    const { data: session } = useSession();
 
     return (
         <AppBar position="static">
@@ -41,8 +45,26 @@ export default function AppBarComponent() {
                 <IconButton color="inherit" onClick={toggleColorMode} aria-label="toggle theme">
                     {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
                 </IconButton>
+                {session?.user && (
+                    <>
+                        <Typography variant="body2" sx={{ ml: 1, mr: 0.5, opacity: 0.85 }}>
+                            {session.user.name ?? session.user.email}
+                        </Typography>
+                        <Tooltip title="Sign out">
+                            <IconButton
+                                color="inherit"
+                                onClick={() => signOut({ callbackUrl: '/login' })}
+                                aria-label="sign out"
+                            >
+                                <LogoutIcon />
+                            </IconButton>
+                        </Tooltip>
+                    </>
+                )}
             </Toolbar>
         </AppBar>
     );
 }
+
+
 

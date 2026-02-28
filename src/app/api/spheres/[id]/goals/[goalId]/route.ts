@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Sphere from '@/lib/models/Sphere';
+import { auth } from '@/auth';
 
 interface RouteParams {
   params: Promise<{ id: string; goalId: string }>;
@@ -8,10 +9,13 @@ interface RouteParams {
 
 export async function DELETE(_request: Request, { params }: RouteParams) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     await connectToDatabase();
     const { id, goalId } = await params;
     const sphere = await Sphere.findOneAndUpdate(
-      { id },
+      { id, userId: session.user.id },
       { $pull: { goals: { id: goalId } } },
       { new: true },
     ).lean();
@@ -22,4 +26,6 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: 'Failed to delete goal' }, { status: 500 });
   }
 }
+
+
 
