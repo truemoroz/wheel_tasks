@@ -29,7 +29,7 @@ export default function SphereList() {
   }, []);
 
   const sortedSpheres = useMemo(
-    () => [...spheres].sort((a, b) => b.rating - a.rating),
+    () => [...spheres].sort((a, b) => a.rating - b.rating),
     [spheres],
   );
 
@@ -42,6 +42,22 @@ export default function SphereList() {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...sphere, rating }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setSpheres((prev) => updateSphere(prev, updated));
+    }
+  };
+
+  const handleNameChange = async (id: string, name: string) => {
+    // Optimistic update
+    setSpheres((prev) => prev.map((s) => (s.id === id ? { ...s, name } : s)));
+    const sphere = spheres.find((s) => s.id === id);
+    if (!sphere) return;
+    const res = await fetch(`/api/spheres/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...sphere, name }),
     });
     if (res.ok) {
       const updated = await res.json();
@@ -144,6 +160,7 @@ export default function SphereList() {
           key={group.id}
           group={group}
           onRatingChange={handleRatingChange}
+          onNameChange={handleNameChange}
           onTaskToggle={handleTaskToggle}
           onTaskAdd={handleTaskAdd}
           onTaskDelete={handleTaskDelete}

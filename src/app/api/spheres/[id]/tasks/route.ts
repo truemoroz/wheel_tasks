@@ -19,7 +19,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     const sphere = await Sphere.findOneAndUpdate(
       { id, userId: session.user.id },
       { $push: { tasks: { id: taskId, title, completed: false } } },
-      { new: true },
+      { returnDocument: 'after' },
     ).lean();
     if (!sphere) return NextResponse.json({ error: 'Sphere not found' }, { status: 404 });
     return NextResponse.json(sphere, { status: 201 });

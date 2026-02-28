@@ -13,7 +13,7 @@ export function proxy(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
   if (isLoggedIn && isPublic) {
-    return NextResponse.redirect(new URL('/', req.nextUrl.origin));
+    return NextResponse.redirect(new URL('/todo', req.nextUrl.origin));
   }
   return NextResponse.next();
 }

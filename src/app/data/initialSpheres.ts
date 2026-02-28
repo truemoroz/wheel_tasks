@@ -2,32 +2,30 @@ import { LifeSphereGroup } from '@/app/types/todo';
 export const initialSpheres: LifeSphereGroup[] = [
   {
     id: '1',
-    name: 'Health',
+    name: 'Health & Fitness',
     rating: 6,
     goals: [
-      { id: 'g1-1', title: 'Freedom from cigarettes and weed' },
-      { id: 'g1-2', title: 'Yoga practice' },
+      { id: 'g1-1', title: 'Reach healthy BMI' },
+      { id: 'g1-2', title: 'Run 5K without stopping' },
     ],
     tasks: [
       { id: 't1-1', title: 'Exercise 3 times a week', completed: false },
-      { id: 't1-2', title: 'Make checkup, especially liver', completed: true },
-      { id: 't1-3', title: 'Heal my knees', completed: false },
+      { id: 't1-2', title: 'Drink 2L of water daily', completed: true },
+      { id: 't1-3', title: 'Sleep 7-8 hours every night', completed: false },
     ],
   },
   {
     id: '2',
-    name: 'Work & Career',
-    rating: 6,
+    name: 'Career & Work',
+    rating: 7,
     goals: [
-      { id: 'g2-1', title: 'I am a practicing psychologist' },
-      { id: 'g2-2', title: 'I am a project manager or a team lead' },
+      { id: 'g2-1', title: 'Get promoted to senior role' },
+      { id: 'g2-2', title: 'Build a professional portfolio' },
     ],
     tasks: [
-      { id: 't2-1', title: 'Write posts', completed: false },
-      { id: 't2-2', title: 'Practice English at work', completed: false },
-      { id: 't2-3', title: 'Write posts in linkedin', completed: false },
-      { id: 't2-4', title: 'Run this project in internet', completed: false },
-      { id: 't2-5', title: 'Try to build project for psychologist beginners', completed: false },
+      { id: 't2-1', title: 'Update resume', completed: false },
+      { id: 't2-2', title: 'Complete online course', completed: false },
+      { id: 't2-3', title: 'Network with 3 new people this month', completed: false },
     ],
   },
   {
@@ -35,8 +33,8 @@ export const initialSpheres: LifeSphereGroup[] = [
     name: 'Finance',
     rating: 5,
     goals: [
-      { id: 'g3-1', title: 'Build 50k capital' },
-      // { id: 'g3-2', title: 'Start investing regularly' },
+      { id: 'g3-1', title: 'Build 6-month emergency fund' },
+      { id: 'g3-2', title: 'Start investing regularly' },
     ],
     tasks: [
       { id: 't3-1', title: 'Create a monthly budget', completed: true },
@@ -46,17 +44,16 @@ export const initialSpheres: LifeSphereGroup[] = [
   },
   {
     id: '4',
-    name: 'Relationships',
-    rating: 7,
+    name: 'Relationships & Family',
+    rating: 8,
     goals: [
-      { id: 'g4-1', title: 'I am in a healthy relationship' },
-      { id: 'g4-2', title: 'I am a husband of a beautiful wife' },
-      { id: 'g4-3', title: 'We have common hobbies' },
+      { id: 'g4-1', title: 'Spend quality time with family weekly' },
+      { id: 'g4-2', title: 'Strengthen friendships' },
     ],
     tasks: [
-      { id: 't4-1', title: 'Spend a week with Maria qualitatively', completed: false },
-      { id: 't4-2', title: 'Have a good sex', completed: false },
-      { id: 't4-3', title: 'Decide what to do next', completed: false },
+      { id: 't4-1', title: 'Call parents every week', completed: true },
+      { id: 't4-2', title: 'Plan a weekend outing with friends', completed: false },
+      { id: 't4-3', title: 'Write a heartfelt letter to a loved one', completed: false },
     ],
   },
   {

@@ -17,26 +17,34 @@ import TextField from '@mui/material/TextField';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import FlagIcon from '@mui/icons-material/Flag';
+import EditIcon from '@mui/icons-material/Edit';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import { LifeSphereGroup } from '@/app/types/todo';
+
 function getRatingColor(rating: number): 'error' | 'warning' | 'success' | 'default' {
   if (rating <= 3) return 'error';
   if (rating <= 6) return 'warning';
   return 'success';
 }
+
 interface SphereGroupProps {
   group: LifeSphereGroup;
   onRatingChange: (id: string, rating: number) => void;
+  onNameChange: (id: string, name: string) => void;
   onTaskToggle: (groupId: string, taskId: string) => void;
   onTaskAdd: (groupId: string, title: string) => void;
   onTaskDelete: (groupId: string, taskId: string) => void;
   onGoalAdd: (groupId: string, title: string) => void;
   onGoalDelete: (groupId: string, goalId: string) => void;
 }
+
 export default function SphereGroup({
   group,
   onRatingChange,
+  onNameChange,
   onTaskToggle,
   onTaskAdd,
   onTaskDelete,
@@ -45,26 +53,118 @@ export default function SphereGroup({
 }: SphereGroupProps) {
   const [newTask, setNewTask] = useState('');
   const [newGoal, setNewGoal] = useState('');
+  const [editingName, setEditingName] = useState(false);
+  const [nameValue, setNameValue] = useState(group.name);
+
+  const handleSaveName = () => {
+    const trimmed = nameValue.trim();
+    if (trimmed && trimmed !== group.name) {
+      onNameChange(group.id, trimmed);
+    } else {
+      setNameValue(group.name);
+    }
+    setEditingName(false);
+  };
+
+  const handleCancelName = () => {
+    setNameValue(group.name);
+    setEditingName(false);
+  };
+
   const handleAddTask = () => {
     if (newTask.trim()) {
       onTaskAdd(group.id, newTask.trim());
       setNewTask('');
     }
   };
+
   const handleAddGoal = () => {
     if (newGoal.trim()) {
       onGoalAdd(group.id, newGoal.trim());
       setNewGoal('');
     }
   };
+
   const completedCount = group.tasks.filter((t) => t.completed).length;
   return (
     <Accordion>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%', mr: 2 }}>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            {group.name}
-          </Typography>
+          {editingName ? (
+            <Box
+              sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <TextField
+                size="small"
+                value={nameValue}
+                onChange={(e) => setNameValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSaveName();
+                  if (e.key === 'Escape') handleCancelName();
+                }}
+                autoFocus
+                sx={{ flexGrow: 1 }}
+              />
+              <Box
+                component="span"
+                role="button"
+                tabIndex={0}
+                onClick={handleSaveName}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSaveName(); }}
+                aria-label="save name"
+                sx={{
+                  display: 'inline-flex', alignItems: 'center', cursor: 'pointer',
+                  borderRadius: '50%', padding: '4px', color: 'primary.main',
+                  '&:hover': { backgroundColor: 'action.hover' },
+                }}
+              >
+                <CheckIcon fontSize="small" />
+              </Box>
+              <Box
+                component="span"
+                role="button"
+                tabIndex={0}
+                onClick={handleCancelName}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleCancelName(); }}
+                aria-label="cancel edit"
+                sx={{
+                  display: 'inline-flex', alignItems: 'center', cursor: 'pointer',
+                  borderRadius: '50%', padding: '4px', color: 'action.active',
+                  '&:hover': { backgroundColor: 'action.hover' },
+                }}
+              >
+                <CloseIcon fontSize="small" />
+              </Box>
+            </Box>
+          ) : (
+            <Box
+              sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}
+            >
+              <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                {group.name}
+              </Typography>
+              <Box
+                component="span"
+                role="button"
+                tabIndex={0}
+                onClick={(e) => { e.stopPropagation(); setEditingName(true); }}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); setEditingName(true); } }}
+                aria-label="edit name"
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  borderRadius: '50%',
+                  padding: '4px',
+                  color: 'action.active',
+                  '&:hover': { backgroundColor: 'action.hover' },
+                }}
+              >
+                <EditIcon fontSize="small" />
+              </Box>
+            </Box>
+          )}
           <Chip
             label={`${group.rating}/10`}
             color={getRatingColor(group.rating)}
