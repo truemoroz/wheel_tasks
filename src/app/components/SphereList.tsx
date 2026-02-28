@@ -10,6 +10,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { LifeSphereGroup } from '@/app/types/todo';
 import SphereGroup from '@/app/components/SphereGroup';
+import WheelOfLife from "@/app/components/WheelOfLife";
 
 function updateSphere(spheres: LifeSphereGroup[], updated: LifeSphereGroup): LifeSphereGroup[] {
   return spheres.map((s) => (s.id === updated.id ? updated : s));
@@ -160,18 +161,20 @@ export default function SphereList() {
   }
 
   return (
-    <Box
-      sx={{
-        display: 'grid',
-        gridTemplateColumns: {
-          xs: '1fr',
-          lg: goalsCollapsed ? '40px 1fr' : '1fr 1fr',
-        },
-        gap: 2,
-        alignItems: 'start',
-        transition: 'grid-template-columns 0.3s ease',
-      }}
-    >
+    <>
+      <WheelOfLife spheres={sortedSpheres} />
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            lg: goalsCollapsed ? '40px 1fr' : '1fr 1fr',
+          },
+          gap: 2,
+          alignItems: 'start',
+          transition: 'grid-template-columns 0.3s ease',
+        }}
+      >
       {/* Goals column */}
       <Box sx={{ minWidth: 0 }}>
         <Box sx={{ mb: 1, px: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -230,5 +233,6 @@ export default function SphereList() {
         </Box>
       </Box>
     </Box>
+    </>
   );
 }
