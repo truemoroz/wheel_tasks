@@ -37,7 +37,6 @@ export default function AppBarComponent() {
                     Home
                 </Button>
                 <Button color="inherit" component={Link} href="/todo">
-                    Todo
                 </Button>
                 {/*<Button color="inherit" component={Link} href="/dashboard">*/}
                 {/*    Dashboard*/}
