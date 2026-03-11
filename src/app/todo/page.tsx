@@ -9,9 +9,10 @@ export default function TodoPage() {
         <Typography variant="h4" fontWeight="bold" gutterBottom>
           Wheel of Life
         </Typography>
+        {/*TODO make option for sorting*/}
         <Typography variant="body1" color="text.secondary">
           8 spheres of your life. Rate each area, set goals, and track tasks.
-          Groups are sorted by rating (highest first).
+          Groups are sorted by rating (lower first).
         </Typography>
       </Box>
       <SphereList />

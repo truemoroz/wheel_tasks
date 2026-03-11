@@ -178,7 +178,7 @@ export default function SphereList() {
           }}
           onClick={() => setWheelCollapsed((v) => !v)}
         >
-          <Typography variant="subtitle2" color="text.secondary">
+          <Typography variant="h6" fontWeight="bold">
             Wheel of Life
           </Typography>
           <Tooltip title={wheelCollapsed ? 'Expand diagram' : 'Collapse diagram'}>
@@ -200,41 +200,80 @@ export default function SphereList() {
           },
           gap: 2,
           alignItems: 'start',
-          transition: 'grid-template-columns 0.3s ease',
         }}
       >
       {/* Goals column */}
-      <Box sx={{ minWidth: 0 }}>
-        <Box sx={{ mb: 1, px: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-          {!goalsCollapsed && (
-            <Typography variant="h6" fontWeight="bold" sx={{ flexGrow: 1 }}>
-              Goals
-            </Typography>
+      <Box sx={{ minWidth: 0, width: '100%' }}>
+        <Box
+          sx={{
+            mb: 1,
+            px: 1,
+            display: 'flex',
+            flexDirection: goalsCollapsed ? 'column' : 'row',
+            alignItems: 'center',
+            gap: 1,
+          }}
+        >
+          {goalsCollapsed ? (
+            <>
+              <Tooltip title="Expand goals">
+                <IconButton size="small" onClick={() => setGoalsCollapsed((v) => !v)}>
+                  <ChevronRightIcon />
+                </IconButton>
+              </Tooltip>
+              <Typography
+                variant="h6"
+                fontWeight="bold"
+                sx={{
+                  writingMode: 'vertical-rl',
+                  textOrientation: 'mixed',
+                  transform: 'rotate(180deg)',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Goals
+              </Typography>
+            </>
+          ) : (
+            <>
+              <Typography variant="h6" fontWeight="bold" sx={{ flexGrow: 1 }}>
+                Goals
+              </Typography>
+              <Tooltip title="Collapse goals">
+                <IconButton size="small" onClick={() => setGoalsCollapsed((v) => !v)}>
+                  <ChevronLeftIcon />
+                </IconButton>
+              </Tooltip>
+            </>
           )}
-          <Tooltip title={goalsCollapsed ? 'Expand goals' : 'Collapse goals'}>
-            <IconButton size="small" onClick={() => setGoalsCollapsed((v) => !v)}>
-              {goalsCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-            </IconButton>
-          </Tooltip>
         </Box>
-        {!goalsCollapsed && (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {sortedSpheres.map((group) => (
-              <SphereGroup
-                key={group.id}
-                group={group}
-                view="goals"
-                onRatingChange={handleRatingChange}
-                onNameChange={handleNameChange}
-                onTaskToggle={handleTaskToggle}
-                onTaskAdd={handleTaskAdd}
-                onTaskDelete={handleTaskDelete}
-                onGoalAdd={handleGoalAdd}
-                onGoalDelete={handleGoalDelete}
-              />
-            ))}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: goalsCollapsed ? '0fr' : '1fr',
+            transition: 'grid-template-columns 0.3s ease',
+            overflow: 'hidden',
+          }}
+        >
+          <Box sx={{ overflow: 'hidden', minWidth: 0 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {sortedSpheres.map((group) => (
+                <SphereGroup
+                  key={group.id}
+                  group={group}
+                  view="goals"
+                  onRatingChange={handleRatingChange}
+                  onNameChange={handleNameChange}
+                  onTaskToggle={handleTaskToggle}
+                  onTaskAdd={handleTaskAdd}
+                  onTaskDelete={handleTaskDelete}
+                  onGoalAdd={handleGoalAdd}
+                  onGoalDelete={handleGoalDelete}
+                />
+              ))}
+            </Box>
           </Box>
-        )}
+        </Box>
       </Box>
       {/* Tasks column */}
       <Box>

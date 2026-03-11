@@ -92,7 +92,7 @@ export default function SphereGroup({
   return (
     <Accordion>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%', mr: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%', mr: 2, overflow: 'hidden' }}>
           {editingName ? (
             <Box
               sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}
@@ -144,7 +144,7 @@ export default function SphereGroup({
             <Box
               sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}
             >
-              <Typography variant="h6" sx={{ flexGrow: 1 }}>
+              <Typography variant="h6" sx={{ flexGrow: 1, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
                 {group.name}
               </Typography>
               <Box
