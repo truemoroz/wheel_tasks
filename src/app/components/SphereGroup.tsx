@@ -39,8 +39,11 @@ interface SphereGroupProps {
   onTaskDelete: (groupId: string, taskId: string) => void;
   onGoalAdd: (groupId: string, title: string) => void;
   onGoalDelete: (groupId: string, goalId: string) => void;
+  onGoalEstimationChange?: (groupId: string, goalId: string, estimation: number | null) => void;
   /** Which section to render. Defaults to 'full'. */
   view?: 'full' | 'goals' | 'tasks';
+  /** Sort order for goals. Defaults to 'default'. */
+  goalSort?: 'default' | 'asc' | 'desc';
 }
 
 export default function SphereGroup({
@@ -52,7 +55,9 @@ export default function SphereGroup({
   onTaskDelete,
   onGoalAdd,
   onGoalDelete,
+  onGoalEstimationChange,
   view = 'full',
+  goalSort = 'default',
 }: SphereGroupProps) {
   const [newTask, setNewTask] = useState('');
   const [newGoal, setNewGoal] = useState('');
@@ -89,6 +94,17 @@ export default function SphereGroup({
   };
 
   const completedCount = group.tasks.filter((t) => t.completed).length;
+
+  const sortedGoals = goalSort === 'default'
+    ? group.goals
+    : [...group.goals].sort((a, b) => {
+        const aVal = a.estimation ?? null;
+        const bVal = b.estimation ?? null;
+        if (aVal === null && bVal === null) return 0;
+        if (aVal === null) return 1;
+        if (bVal === null) return -1;
+        return goalSort === 'asc' ? aVal - bVal : bVal - aVal;
+      });
   return (
     <Accordion>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -204,13 +220,27 @@ export default function SphereGroup({
               Goals
             </Typography>
             <List dense>
-              {group.goals.map((goal) => (
+              {sortedGoals.map((goal) => (
                 <ListItem
                   key={goal.id}
                   secondaryAction={
-                    <IconButton edge="end" size="small" onClick={() => onGoalDelete(group.id, goal.id)}>
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <TextField
+                        size="small"
+                        type="number"
+                        placeholder="Est."
+                        value={goal.estimation ?? ''}
+                        onChange={(e) => {
+                          const val = e.target.value === '' ? null : Number(e.target.value);
+                          onGoalEstimationChange?.(group.id, goal.id, val);
+                        }}
+                        inputProps={{ min: 1, style: { width: 48 } }}
+                        sx={{ width: 72 }}
+                      />
+                      <IconButton edge="end" size="small" onClick={() => onGoalDelete(group.id, goal.id)}>
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
                   }
                 >
                   <ListItemIcon sx={{ minWidth: 32 }}>

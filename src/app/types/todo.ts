@@ -6,6 +6,7 @@ export interface Task {
 export interface Goal {
   id: string;
   title: string;
+  estimation?: number;
 }
 export interface LifeSphereGroup {
   id: string;

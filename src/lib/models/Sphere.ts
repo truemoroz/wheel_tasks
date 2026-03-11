@@ -9,10 +9,12 @@ export interface ITask {
 export interface IGoal {
   id: string;
   title: string;
+  estimation?: number;
 }
 
 export interface ISphere extends Document {
   id: string;
+  userId: string;
   name: string;
   rating: number;
   goals: IGoal[];
@@ -32,6 +34,7 @@ const GoalSchema = new Schema<IGoal>(
   {
     id: { type: String, required: true },
     title: { type: String, required: true },
+    estimation: { type: Number, default: null },
   },
   { _id: false },
 );

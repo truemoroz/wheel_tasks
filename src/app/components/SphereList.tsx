@@ -11,6 +11,8 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { LifeSphereGroup } from '@/app/types/todo';
 import SphereGroup from '@/app/components/SphereGroup';
 import WheelOfLife from "@/app/components/WheelOfLife";
@@ -25,6 +27,7 @@ export default function SphereList() {
   const [error, setError] = useState<string | null>(null);
   const [goalsCollapsed, setGoalsCollapsed] = useState(false);
   const [wheelCollapsed, setWheelCollapsed] = useState(false);
+  const [goalSort, setGoalSort] = useState<'asc' | 'desc'>('asc');
 
   useEffect(() => {
     fetch('/api/spheres')
@@ -40,8 +43,8 @@ export default function SphereList() {
   }, []);
 
   const sortedSpheres = useMemo(
-    () => [...spheres].sort((a, b) => a.rating - b.rating),
-    [spheres],
+    () => [...spheres].sort((a, b) => goalSort === 'asc' ? a.rating - b.rating : b.rating - a.rating),
+    [spheres, goalSort],
   );
 
   const handleRatingChange = async (id: string, rating: number) => {
@@ -152,6 +155,26 @@ export default function SphereList() {
     }
   };
 
+  const handleGoalEstimationChange = async (groupId: string, goalId: string, estimation: number | null) => {
+    // Optimistic update
+    setSpheres((prev) =>
+      prev.map((s) =>
+        s.id === groupId
+          ? { ...s, goals: s.goals.map((g) => (g.id === goalId ? { ...g, estimation: estimation ?? undefined } : g)) }
+          : s,
+      ),
+    );
+    const res = await fetch(`/api/spheres/${groupId}/goals/${goalId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estimation }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setSpheres((prev) => updateSphere(prev, updated));
+    }
+  };
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
@@ -239,6 +262,11 @@ export default function SphereList() {
               <Typography variant="h6" fontWeight="bold" sx={{ flexGrow: 1 }}>
                 Goals
               </Typography>
+              <Tooltip title={goalSort === 'asc' ? 'Sort by rating: high first' : 'Sort by rating: low first'}>
+                <IconButton size="small" onClick={() => setGoalSort((v) => v === 'asc' ? 'desc' : 'asc')} color="primary">
+                  {goalSort === 'asc' ? <ArrowUpwardIcon fontSize="small" /> : <ArrowDownwardIcon fontSize="small" />}
+                </IconButton>
+              </Tooltip>
               <Tooltip title="Collapse goals">
                 <IconButton size="small" onClick={() => setGoalsCollapsed((v) => !v)}>
                   <ChevronLeftIcon />
