@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Dark background -->
+  <circle cx="32" cy="32" r="30" fill="#111827"/>
+
+  <!-- Grid rings -->
+  <circle cx="32" cy="32" r="8.4"  fill="none" stroke="rgba(255,255,255,0.13)" stroke-width="0.8"/>
+  <circle cx="32" cy="32" r="16.8" fill="none" stroke="rgba(255,255,255,0.13)" stroke-width="0.8"/>
+  <circle cx="32" cy="32" r="25.2" fill="none" stroke="rgba(255,255,255,0.13)" stroke-width="0.8"/>
+  <circle cx="32" cy="32" r="28"   fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="0.8"/>
+
+  <!-- Axis spokes -->
+  <line x1="32" y1="4"  x2="32" y2="60" stroke="rgba(255,255,255,0.18)" stroke-width="0.8"/>
+  <line x1="4"  y1="32" x2="60" y2="32" stroke="rgba(255,255,255,0.18)" stroke-width="0.8"/>
+
+  <!-- Segment 0 (0–90°): rating 7 → blue rgb(59,130,246), r=19.6 -->
+  <!-- start(0°)=(32,12.4), end(90°)=(51.6,32) -->
+  <path d="M 32 32 L 32 12.4 A 19.6 19.6 0 0 1 51.6 32 Z"
+        fill="rgb(59,130,246)" fill-opacity="0.6"
+        stroke="rgb(59,130,246)" stroke-width="0.8" stroke-opacity="0.9"/>
+
+  <!-- Segment 1 (90–180°): rating 9 → purple rgb(168,85,247), r=25.2 -->
+  <!-- start(90°)=(57.2,32), end(180°)=(32,57.2) -->
+  <path d="M 32 32 L 57.2 32 A 25.2 25.2 0 0 1 32 57.2 Z"
+        fill="rgb(168,85,247)" fill-opacity="0.6"
+        stroke="rgb(168,85,247)" stroke-width="0.8" stroke-opacity="0.9"/>
+
+  <!-- Segment 2 (180–270°): rating 6 → green rgb(34,197,94), r=16.8 -->
+  <!-- start(180°)=(32,48.8), end(270°)=(15.2,32) -->
+  <path d="M 32 32 L 32 48.8 A 16.8 16.8 0 0 1 15.2 32 Z"
+        fill="rgb(34,197,94)" fill-opacity="0.6"
+        stroke="rgb(34,197,94)" stroke-width="0.8" stroke-opacity="0.9"/>
+
+  <!-- Segment 3 (270–360°): rating 8 → blue-purple rgb(114,108,247), r=22.4 -->
+  <!-- start(270°)=(9.6,32), end(360°)=(32,9.6) -->
+  <path d="M 32 32 L 9.6 32 A 22.4 22.4 0 0 1 32 9.6 Z"
+        fill="rgb(59,130,246)" fill-opacity="0.55"
+        stroke="rgb(59,130,246)" stroke-width="0.8" stroke-opacity="0.9"/>
+
+  <!-- Outer border ring -->
+  <circle cx="32" cy="32" r="30" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+</svg>
+

@@ -55,6 +55,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      // After sign-in, always go to /todo unless a specific callbackUrl is provided
+      if (url.startsWith(baseUrl)) return url;
+      if (url.startsWith('/')) return `${baseUrl}${url}`;
+      return `${baseUrl}/todo`;
+    },
   },
   pages: { signIn: '/login' },
 });

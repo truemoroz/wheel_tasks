@@ -33,10 +33,11 @@ export default function AppBarComponent() {
                 <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                     Dashboard
                 </Typography>
-                <Button color="inherit" component={Link} href="/">
-                    Home
-                </Button>
+                {/*<Button color="inherit" component={Link} href="/">*/}
+                {/*    Home*/}
+                {/*</Button>*/}
                 <Button color="inherit" component={Link} href="/todo">
+                    Todo
                 </Button>
                 {/*<Button color="inherit" component={Link} href="/dashboard">*/}
                 {/*    Dashboard*/}
