@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Tasks of the Wheel of Life",
+  title: "Wheel path - Personal Dashboard for a Balanced Life",
   description: "Define your priorities, set goals, and track tasks across 8 key areas of your life. Rate each sphere, create actionable goals, and stay organized with a simple task list. Your personal dashboard for a balanced life.",
 };
 

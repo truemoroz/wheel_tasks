@@ -107,8 +107,8 @@ export default function WheelOfLife({ spheres }: WheelOfLifeProps) {
 
   return (
     <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-      <Box sx={{ textAlign: 'center' }}>
-        <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} style={{ display: 'block' }}>
+      <Box sx={{ textAlign: 'center', width: '100%', maxWidth: SIZE }}>
+        <svg width="100%" viewBox={`0 0 ${SIZE} ${SIZE}`} style={{ display: 'block' }}>
           {/* Background circle */}
           <circle
             cx={CENTER} cy={CENTER} r={MAX_RADIUS}

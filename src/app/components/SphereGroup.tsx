@@ -106,9 +106,9 @@ export default function SphereGroup({
         return goalSort === 'asc' ? aVal - bVal : bVal - aVal;
       });
   return (
-    <Accordion>
+    <Accordion sx={{ maxWidth: '100%', overflow: 'hidden' }}>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%', mr: 2, overflow: 'hidden' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, width: '100%', mr: 2, overflow: 'hidden' }}>
           {editingName ? (
             <Box
               sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}
@@ -189,7 +189,7 @@ export default function SphereGroup({
             color={getRatingColor(group.rating)}
             size="small"
           />
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' }, whiteSpace: 'nowrap' }}>
             {completedCount}/{group.tasks.length} tasks
           </Typography>
         </Box>
@@ -234,8 +234,8 @@ export default function SphereGroup({
                           const val = e.target.value === '' ? null : Number(e.target.value);
                           onGoalEstimationChange?.(group.id, goal.id, val);
                         }}
-                        inputProps={{ min: 1, style: { width: 48 } }}
-                        sx={{ width: 72 }}
+                        inputProps={{ min: 1, style: { width: 36 } }}
+                        sx={{ width: { xs: 60, sm: 72 } }}
                       />
                       <IconButton edge="end" size="small" onClick={() => onGoalDelete(group.id, goal.id)}>
                         <DeleteIcon fontSize="small" />

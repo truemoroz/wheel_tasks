@@ -221,19 +221,47 @@ export default function SphereList() {
             xs: '1fr',
             lg: goalsCollapsed ? '40px 1fr' : '1fr 1fr',
           },
-          gap: 2,
+          gap: { xs: 1, sm: 2 },
           alignItems: 'start',
+          overflow: 'hidden',
+          minWidth: 0,
         }}
       >
       {/* Goals column */}
       <Box sx={{ minWidth: 0, width: '100%' }}>
+
+        {/* ── Mobile header (xs..lg): always horizontal row, ExpandMore/Less ── */}
         <Box
           sx={{
+            display: { xs: 'flex', lg: 'none' },
+            alignItems: 'center',
             mb: 1,
-            px: 1,
-            display: 'flex',
+            gap: 1,
+          }}
+        >
+          <Typography variant="h6" fontWeight="bold" sx={{ flexGrow: 1 }}>
+            Goals
+          </Typography>
+          <Tooltip title={goalSort === 'asc' ? 'Sort: high first' : 'Sort: low first'}>
+            <IconButton size="small" onClick={() => setGoalSort((v) => v === 'asc' ? 'desc' : 'asc')} color="primary">
+              {goalSort === 'asc' ? <ArrowUpwardIcon fontSize="small" /> : <ArrowDownwardIcon fontSize="small" />}
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={goalsCollapsed ? 'Expand goals' : 'Collapse goals'}>
+            <IconButton size="small" onClick={() => setGoalsCollapsed((v) => !v)}>
+              {goalsCollapsed ? <ExpandMoreIcon fontSize="small" /> : <ExpandLessIcon fontSize="small" />}
+            </IconButton>
+          </Tooltip>
+        </Box>
+
+        {/* ── PC header (lg+): horizontal when expanded, vertical column when collapsed ── */}
+        <Box
+          sx={{
+            display: { xs: 'none', lg: 'flex' },
             flexDirection: goalsCollapsed ? 'column' : 'row',
             alignItems: 'center',
+            mb: 1,
+            px: 1,
             gap: 1,
           }}
         >
@@ -275,15 +303,23 @@ export default function SphereList() {
             </>
           )}
         </Box>
+
+        {/* ── Content: vertical collapse on mobile, horizontal on PC ── */}
         <Box
-          sx={{
+          sx={(theme) => ({
             display: 'grid',
-            gridTemplateColumns: goalsCollapsed ? '0fr' : '1fr',
-            transition: 'grid-template-columns 0.3s ease',
             overflow: 'hidden',
-          }}
+            [theme.breakpoints.down('lg')]: {
+              gridTemplateRows: goalsCollapsed ? '0fr' : '1fr',
+              transition: 'grid-template-rows 0.3s ease',
+            },
+            [theme.breakpoints.up('lg')]: {
+              gridTemplateColumns: goalsCollapsed ? '0fr' : '1fr',
+              transition: 'grid-template-columns 0.3s ease',
+            },
+          })}
         >
-          <Box sx={{ overflow: 'hidden', minWidth: 0 }}>
+          <Box sx={{ overflow: 'hidden', minWidth: 0, minHeight: 0 }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               {sortedSpheres.map((group) => (
                 <SphereGroup
@@ -297,6 +333,7 @@ export default function SphereList() {
                   onTaskDelete={handleTaskDelete}
                   onGoalAdd={handleGoalAdd}
                   onGoalDelete={handleGoalDelete}
+                  onGoalEstimationChange={handleGoalEstimationChange}
                 />
               ))}
             </Box>
@@ -304,8 +341,8 @@ export default function SphereList() {
         </Box>
       </Box>
       {/* Tasks column */}
-      <Box>
-        <Box sx={{ mb: 1, px: 1 }}>
+      <Box sx={{ minWidth: 0, width: '100%' }}>
+        <Box sx={{ mb: 1, px: { xs: 0, sm: 1 } }}>
           <Typography variant="h6" fontWeight="bold">
             Tasks
           </Typography>

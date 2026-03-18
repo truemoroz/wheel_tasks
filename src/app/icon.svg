@@ -1,6 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <!-- Dark background -->
-  <circle cx="32" cy="32" r="30" fill="#111827"/>
+  <!-- Transparent background -->
 
   <!-- Grid rings -->
   <circle cx="32" cy="32" r="8.4"  fill="none" stroke="rgba(255,255,255,0.13)" stroke-width="0.8"/>
