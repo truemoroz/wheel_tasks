@@ -14,6 +14,7 @@ export default function TodoPage() {
           Groups are sorted by rating (lower first).
         </Typography>
       </Box>
+      {/*TODO make mobile layout*/}
       <SphereList />
     </Container>
   );

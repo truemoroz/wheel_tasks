@@ -35,7 +35,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         await connectToDatabase();
         const existing = await User.findOne({ email: user.email });
         if (!existing) {
-          await User.create({ name: user.name, email: user.email });
+          await User.create({ email: user.email! });
         }
       }
       return true;
