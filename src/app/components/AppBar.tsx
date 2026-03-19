@@ -7,8 +7,8 @@ import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import MenuIcon from '@mui/icons-material/Menu';
-import Brightness4Icon from '@mui/icons-material/Brightness4';
-import Brightness7Icon from '@mui/icons-material/Brightness7';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import LightModeIcon from '@mui/icons-material/LightMode';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useColorMode } from '@/app/components/ColorModeContext';
 import Link from 'next/link';
@@ -45,8 +45,9 @@ export default function AppBarComponent() {
                 {/*<Button color="inherit" component={Link} href="/dashboard">*/}
                 {/*    Dashboard*/}
                 {/*</Button>*/}
+                {/*TODO change icon*/}
                 <IconButton color="inherit" onClick={toggleColorMode} aria-label="toggle theme">
-                    {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+                    {mode === 'dark' ? <DarkModeIcon /> : <LightModeIcon />}
                 </IconButton>
                 {session?.user && (
                     <>
