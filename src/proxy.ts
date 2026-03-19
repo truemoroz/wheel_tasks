@@ -6,7 +6,9 @@ export function proxy(req: NextRequest) {
     req.cookies.get('__Secure-authjs.session-token')?.value;
   const isLoggedIn = !!sessionToken;
   const isPublic =
-    pathname.startsWith('/login') || pathname.startsWith('/register');
+    pathname === '/' ||
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/register');
   if (!isLoggedIn && !isPublic) {
     const loginUrl = new URL('/login', req.nextUrl.origin);
     loginUrl.searchParams.set('callbackUrl', pathname);

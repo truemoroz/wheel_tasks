@@ -45,7 +45,6 @@ export default function AppBarComponent() {
                 {/*<Button color="inherit" component={Link} href="/dashboard">*/}
                 {/*    Dashboard*/}
                 {/*</Button>*/}
-                {/*TODO change icon*/}
                 <IconButton color="inherit" onClick={toggleColorMode} aria-label="toggle theme">
                     {mode === 'dark' ? <DarkModeIcon /> : <LightModeIcon />}
                 </IconButton>

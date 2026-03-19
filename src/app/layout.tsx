@@ -19,6 +19,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Wheel path - Personal Dashboard for a Balanced Life",
   description: "Define your priorities, set goals, and track tasks across 8 key areas of your life. Rate each sphere, create actionable goals, and stay organized with a simple task list. Your personal dashboard for a balanced life.",
+  icons: {
+    icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
+    shortcut: [{ url: '/icon.svg', type: 'image/svg+xml' }],
+  },
 };
 
 export default function RootLayout({
