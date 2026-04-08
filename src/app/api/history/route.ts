@@ -19,12 +19,13 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const days = Math.min(365, Math.max(7, parseInt(searchParams.get('days') ?? '30')));
 
-    const since = new Date();
-    since.setDate(since.getDate() - (days - 1));
-    since.setHours(0, 0, 0, 0);
+    // Build the range in UTC so toISOString() and $dateToString (UTC) stay consistent
+    const now = new Date();
+    const todayUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+    const sinceUTC = new Date(todayUTC - (days - 1) * 86_400_000);
 
     const aggregated = await CompletedTask.aggregate<{ _id: string; significance: number; count: number }>([
-      { $match: { userId: session.user.id, completedAt: { $gte: since } } },
+      { $match: { userId: session.user.id, completedAt: { $gte: sinceUTC } } },
       {
         $group: {
           _id: { $dateToString: { format: '%Y-%m-%d', date: '$completedAt' } },
@@ -43,9 +44,7 @@ export async function GET(request: Request) {
 
     const result: DayEntry[] = [];
     for (let i = 0; i < days; i++) {
-      const d = new Date(since);
-      d.setDate(since.getDate() + i);
-      const key = d.toISOString().slice(0, 10);
+      const key = new Date(sinceUTC.getTime() + i * 86_400_000).toISOString().slice(0, 10);
       result.push({ date: key, significance: byDate[key]?.significance ?? 0, count: byDate[key]?.count ?? 0 });
     }
 
