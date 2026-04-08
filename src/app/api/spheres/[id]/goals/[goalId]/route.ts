@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Sphere from '@/lib/models/Sphere';
 import { auth } from '@/auth';
+import { getHydratedSphere } from '@/lib/taskHelpers';
 
 interface RouteParams {
   params: Promise<{ id: string; goalId: string }>;
@@ -17,10 +18,11 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
     const sphere = await Sphere.findOneAndUpdate(
       { id, userId: session.user.id },
       { $pull: { goals: { id: goalId } } },
-      { new: true },
+      { returnDocument: 'after' },
     ).lean();
     if (!sphere) return NextResponse.json({ error: 'Sphere not found' }, { status: 404 });
-    return NextResponse.json(sphere);
+    const hydrated = await getHydratedSphere(id, session.user.id);
+    return NextResponse.json(hydrated);
   } catch (error) {
     console.error('DELETE /api/spheres/[id]/goals/[goalId] error:', error);
     return NextResponse.json({ error: 'Failed to delete goal' }, { status: 500 });
@@ -42,10 +44,11 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     const sphere = await Sphere.findOneAndUpdate(
       { id, userId: session.user.id, 'goals.id': goalId },
       { $set: updateFields },
-      { new: true },
+      { returnDocument: 'after' },
     ).lean();
     if (!sphere) return NextResponse.json({ error: 'Goal not found' }, { status: 404 });
-    return NextResponse.json(sphere);
+    const hydrated = await getHydratedSphere(id, session.user.id);
+    return NextResponse.json(hydrated);
   } catch (error) {
     console.error('PATCH /api/spheres/[id]/goals/[goalId] error:', error);
     return NextResponse.json({ error: 'Failed to update goal' }, { status: 500 });

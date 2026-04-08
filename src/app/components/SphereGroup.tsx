@@ -38,6 +38,9 @@ interface SphereGroupProps {
   onTaskToggle: (groupId: string, taskId: string) => void;
   onTaskAdd: (groupId: string, title: string) => void;
   onTaskDelete: (groupId: string, taskId: string) => void;
+  onTaskSignificanceChange?: (groupId: string, taskId: string, significance: number) => void;
+  onTaskRecurringToggle?: (groupId: string, taskId: string) => void;
+  onTaskLog?: (groupId: string, taskId: string) => Promise<void>;
   onGoalAdd: (groupId: string, title: string) => void;
   onGoalDelete: (groupId: string, goalId: string) => void;
   onGoalEstimationChange?: (groupId: string, goalId: string, estimation: number | null) => void;
@@ -57,6 +60,9 @@ export default function SphereGroup({
   onTaskToggle,
   onTaskAdd,
   onTaskDelete,
+  onTaskSignificanceChange,
+  onTaskRecurringToggle,
+  onTaskLog,
   onGoalAdd,
   onGoalDelete,
   onGoalEstimationChange,
@@ -346,8 +352,12 @@ export default function SphereGroup({
                 <TaskItem
                   key={task.id}
                   task={task}
+                  groupId={group.id}
                   onToggle={() => onTaskToggle(group.id, task.id)}
                   onDelete={() => onTaskDelete(group.id, task.id)}
+                  onSignificanceChange={(taskId, sig) => onTaskSignificanceChange?.(group.id, taskId, sig)}
+                  onRecurringToggle={(taskId) => onTaskRecurringToggle?.(group.id, taskId)}
+                  onLog={onTaskLog}
                   onSubtaskAdd={(taskId, title) => onSubtaskAdd?.(group.id, taskId, title)}
                   onSubtaskToggle={(taskId, subtaskId) => onSubtaskToggle?.(group.id, taskId, subtaskId)}
                   onSubtaskDelete={(taskId, subtaskId) => onSubtaskDelete?.(group.id, taskId, subtaskId)}

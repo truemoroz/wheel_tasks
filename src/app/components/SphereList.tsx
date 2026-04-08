@@ -21,6 +21,15 @@ function updateSphere(spheres: LifeSphereGroup[], updated: LifeSphereGroup): Lif
   return spheres.map((s) => (s.id === updated.id ? updated : s));
 }
 
+/** Recursively update a task anywhere in the task tree by id */
+function updateTaskInTree(tasks: LifeSphereGroup['tasks'], taskId: string, patch: Partial<LifeSphereGroup['tasks'][0]>): LifeSphereGroup['tasks'] {
+  return tasks.map((t) =>
+    t.id === taskId
+      ? { ...t, ...patch }
+      : { ...t, subtasks: updateTaskInTree(t.subtasks, taskId, patch) },
+  );
+}
+
 export default function SphereList() {
   const [spheres, setSpheres] = useState<LifeSphereGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -127,6 +136,62 @@ export default function SphereList() {
       const updated = await res.json();
       setSpheres((prev) => updateSphere(prev, updated));
     }
+  };
+
+  const handleTaskSignificanceChange = async (groupId: string, taskId: string, significance: number) => {
+    // Optimistic update
+    setSpheres((prev) =>
+      prev.map((s) =>
+        s.id === groupId
+          ? { ...s, tasks: updateTaskInTree(s.tasks, taskId, { significance }) }
+          : s,
+      ),
+    );
+    const res = await fetch(`/api/spheres/${groupId}/tasks/${taskId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ significance }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setSpheres((prev) => updateSphere(prev, updated));
+    }
+  };
+
+  const handleTaskRecurringToggle = async (groupId: string, taskId: string) => {
+    const sphere = spheres.find((s) => s.id === groupId);
+    if (!sphere) return;
+    // Find task anywhere in tree
+    const findTask = (tasks: LifeSphereGroup['tasks']): LifeSphereGroup['tasks'][0] | undefined => {
+      for (const t of tasks) {
+        if (t.id === taskId) return t;
+        const found = findTask(t.subtasks);
+        if (found) return found;
+      }
+    };
+    const task = findTask(sphere.tasks);
+    if (!task) return;
+    const recurring = !(task.recurring ?? false);
+    // Optimistic update
+    setSpheres((prev) =>
+      prev.map((s) =>
+        s.id === groupId ? { ...s, tasks: updateTaskInTree(s.tasks, taskId, { recurring }) } : s,
+      ),
+    );
+    const res = await fetch(`/api/spheres/${groupId}/tasks/${taskId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recurring }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setSpheres((prev) => updateSphere(prev, updated));
+    }
+  };
+
+  const handleTaskLog = async (groupId: string, taskId: string) => {
+    await fetch(`/api/spheres/${groupId}/tasks/${taskId}/log`, { method: 'POST' });
+    // No sphere state change needed — task stays active
   };
 
   const handleGoalAdd = async (groupId: string, title: string) => {
@@ -413,6 +478,9 @@ export default function SphereList() {
                   onTaskToggle={handleTaskToggle}
                   onTaskAdd={handleTaskAdd}
                   onTaskDelete={handleTaskDelete}
+                  onTaskSignificanceChange={handleTaskSignificanceChange}
+                  onTaskRecurringToggle={handleTaskRecurringToggle}
+                  onTaskLog={handleTaskLog}
                   onGoalAdd={handleGoalAdd}
                   onGoalDelete={handleGoalDelete}
                   onGoalEstimationChange={handleGoalEstimationChange}
@@ -443,6 +511,9 @@ export default function SphereList() {
               onTaskToggle={handleTaskToggle}
               onTaskAdd={handleTaskAdd}
               onTaskDelete={handleTaskDelete}
+              onTaskSignificanceChange={handleTaskSignificanceChange}
+              onTaskRecurringToggle={handleTaskRecurringToggle}
+              onTaskLog={handleTaskLog}
               onGoalAdd={handleGoalAdd}
               onGoalDelete={handleGoalDelete}
               onSubtaskAdd={handleSubtaskAdd}

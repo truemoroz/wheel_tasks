@@ -1,12 +1,5 @@
 import mongoose, { Schema, Document, Model, models } from 'mongoose';
 
-export interface ITask {
-  id: string;
-  title: string;
-  completed: boolean;
-  subtasks: ITask[];
-}
-
 export interface IGoal {
   id: string;
   title: string;
@@ -19,19 +12,7 @@ export interface ISphere extends Document {
   name: string;
   rating: number;
   goals: IGoal[];
-  tasks: ITask[];
 }
-
-const TaskSchema: Schema = new Schema(
-  {
-    id: { type: String, required: true },
-    title: { type: String, required: true },
-    completed: { type: Boolean, default: false },
-  },
-  { _id: false },
-);
-// recursive: subtasks have the same shape as tasks
-TaskSchema.add({ subtasks: { type: [TaskSchema], default: [] } });
 
 const GoalSchema = new Schema<IGoal>(
   {
@@ -49,7 +30,6 @@ const SphereSchema = new Schema<ISphere>(
     name: { type: String, required: true },
     rating: { type: Number, default: 5 },
     goals: { type: [GoalSchema], default: [] },
-    tasks: { type: [TaskSchema], default: [] },
   },
   { timestamps: true },
 );
@@ -59,4 +39,3 @@ SphereSchema.index({ id: 1, userId: 1 }, { unique: true });
 const Sphere: Model<ISphere> = (models.Sphere as Model<ISphere>) || mongoose.model<ISphere>('Sphere', SphereSchema);
 
 export default Sphere;
-
