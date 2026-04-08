@@ -175,6 +175,88 @@ export default function SphereList() {
     }
   };
 
+  const handleSubtaskAdd = async (groupId: string, taskId: string, title: string) => {
+    const tempId = `st-${Date.now()}`;
+    // Optimistic update
+    setSpheres((prev) =>
+      prev.map((s) =>
+        s.id === groupId
+          ? {
+              ...s,
+              tasks: s.tasks.map((t) =>
+                t.id === taskId
+                  ? { ...t, subtasks: [...(t.subtasks ?? []), { id: tempId, title, completed: false, subtasks: [] }] }
+                  : t,
+              ),
+            }
+          : s,
+      ),
+    );
+    const res = await fetch(`/api/spheres/${groupId}/tasks/${taskId}/subtasks`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setSpheres((prev) => updateSphere(prev, updated));
+    }
+  };
+
+  const handleSubtaskToggle = async (groupId: string, taskId: string, subtaskId: string) => {
+    const sphere = spheres.find((s) => s.id === groupId);
+    if (!sphere) return;
+    const task = sphere.tasks.find((t) => t.id === taskId);
+    if (!task) return;
+    const subtask = task.subtasks?.find((st) => st.id === subtaskId);
+    if (!subtask) return;
+    // Optimistic update
+    setSpheres((prev) =>
+      prev.map((s) =>
+        s.id === groupId
+          ? {
+              ...s,
+              tasks: s.tasks.map((t) =>
+                t.id === taskId
+                  ? { ...t, subtasks: (t.subtasks ?? []).map((st) => (st.id === subtaskId ? { ...st, completed: !st.completed } : st)) }
+                  : t,
+              ),
+            }
+          : s,
+      ),
+    );
+    const res = await fetch(`/api/spheres/${groupId}/tasks/${taskId}/subtasks/${subtaskId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ completed: !subtask.completed }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setSpheres((prev) => updateSphere(prev, updated));
+    }
+  };
+
+  const handleSubtaskDelete = async (groupId: string, taskId: string, subtaskId: string) => {
+    // Optimistic update
+    setSpheres((prev) =>
+      prev.map((s) =>
+        s.id === groupId
+          ? {
+              ...s,
+              tasks: s.tasks.map((t) =>
+                t.id === taskId ? { ...t, subtasks: (t.subtasks ?? []).filter((st) => st.id !== subtaskId) } : t,
+              ),
+            }
+          : s,
+      ),
+    );
+    const res = await fetch(`/api/spheres/${groupId}/tasks/${taskId}/subtasks/${subtaskId}`, { method: 'DELETE' });
+    if (res.ok) {
+      const updated = await res.json();
+      setSpheres((prev) => updateSphere(prev, updated));
+    }
+  };
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
@@ -334,6 +416,9 @@ export default function SphereList() {
                   onGoalAdd={handleGoalAdd}
                   onGoalDelete={handleGoalDelete}
                   onGoalEstimationChange={handleGoalEstimationChange}
+                  onSubtaskAdd={handleSubtaskAdd}
+                  onSubtaskToggle={handleSubtaskToggle}
+                  onSubtaskDelete={handleSubtaskDelete}
                 />
               ))}
             </Box>
@@ -360,6 +445,9 @@ export default function SphereList() {
               onTaskDelete={handleTaskDelete}
               onGoalAdd={handleGoalAdd}
               onGoalDelete={handleGoalDelete}
+              onSubtaskAdd={handleSubtaskAdd}
+              onSubtaskToggle={handleSubtaskToggle}
+              onSubtaskDelete={handleSubtaskDelete}
             />
           ))}
         </Box>

@@ -4,6 +4,7 @@ export interface ITask {
   id: string;
   title: string;
   completed: boolean;
+  subtasks: ITask[];
 }
 
 export interface IGoal {
@@ -21,7 +22,7 @@ export interface ISphere extends Document {
   tasks: ITask[];
 }
 
-const TaskSchema = new Schema<ITask>(
+const TaskSchema: Schema = new Schema(
   {
     id: { type: String, required: true },
     title: { type: String, required: true },
@@ -29,6 +30,8 @@ const TaskSchema = new Schema<ITask>(
   },
   { _id: false },
 );
+// recursive: subtasks have the same shape as tasks
+TaskSchema.add({ subtasks: { type: [TaskSchema], default: [] } });
 
 const GoalSchema = new Schema<IGoal>(
   {

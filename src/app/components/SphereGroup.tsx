@@ -11,11 +11,11 @@ import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import Checkbox from '@mui/material/Checkbox';
 import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
 import FlagIcon from '@mui/icons-material/Flag';
 import EditIcon from '@mui/icons-material/Edit';
 import CheckIcon from '@mui/icons-material/Check';
@@ -23,6 +23,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import { LifeSphereGroup } from '@/app/types/todo';
+import TaskItem from '@/app/components/TaskItem';
 
 function getRatingColor(rating: number): 'error' | 'warning' | 'success' | 'default' {
   if (rating <= 3) return 'error';
@@ -40,6 +41,9 @@ interface SphereGroupProps {
   onGoalAdd: (groupId: string, title: string) => void;
   onGoalDelete: (groupId: string, goalId: string) => void;
   onGoalEstimationChange?: (groupId: string, goalId: string, estimation: number | null) => void;
+  onSubtaskAdd?: (groupId: string, taskId: string, title: string) => void;
+  onSubtaskToggle?: (groupId: string, taskId: string, subtaskId: string) => void;
+  onSubtaskDelete?: (groupId: string, taskId: string, subtaskId: string) => void;
   /** Which section to render. Defaults to 'full'. */
   view?: 'full' | 'goals' | 'tasks';
   /** Sort order for goals. Defaults to 'default'. */
@@ -56,6 +60,9 @@ export default function SphereGroup({
   onGoalAdd,
   onGoalDelete,
   onGoalEstimationChange,
+  onSubtaskAdd,
+  onSubtaskToggle,
+  onSubtaskDelete,
   view = 'full',
   goalSort = 'default',
 }: SphereGroupProps) {
@@ -63,6 +70,7 @@ export default function SphereGroup({
   const [newGoal, setNewGoal] = useState('');
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(group.name);
+  const [sliderValue, setSliderValue] = useState(group.rating);
 
   const handleSaveName = () => {
     const trimmed = nameValue.trim();
@@ -184,11 +192,71 @@ export default function SphereGroup({
               </Box>
             </Box>
           )}
-          <Chip
-            label={`${group.rating}/10`}
-            color={getRatingColor(group.rating)}
-            size="small"
-          />
+          <Box sx={{ display: 'flex', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
+            <Box
+              component="span"
+              role="button"
+              tabIndex={group.rating <= 1 ? -1 : 0}
+              aria-label="decrease rating"
+              aria-disabled={group.rating <= 1}
+              onClick={() => {
+                if (group.rating <= 1) return;
+                const next = group.rating - 1;
+                setSliderValue(next);
+                onRatingChange(group.id, next);
+              }}
+              onKeyDown={(e) => {
+                if ((e.key === 'Enter' || e.key === ' ') && group.rating > 1) {
+                  const next = group.rating - 1;
+                  setSliderValue(next);
+                  onRatingChange(group.id, next);
+                }
+              }}
+              sx={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                borderRadius: '50%', padding: '4px', color: 'action.active',
+                cursor: group.rating <= 1 ? 'default' : 'pointer',
+                opacity: group.rating <= 1 ? 0.38 : 1,
+                '&:hover': { backgroundColor: group.rating <= 1 ? 'transparent' : 'action.hover' },
+              }}
+            >
+              <RemoveIcon fontSize="small" />
+            </Box>
+            <Chip
+              label={`${group.rating}/10`}
+              color={getRatingColor(group.rating)}
+              size="small"
+            />
+            <Box
+              component="span"
+              role="button"
+              tabIndex={group.rating >= 10 ? -1 : 0}
+              aria-label="increase rating"
+              aria-disabled={group.rating >= 10}
+              onClick={() => {
+                if (group.rating >= 10) return;
+                const next = group.rating + 1;
+                setSliderValue(next);
+                onRatingChange(group.id, next);
+              }}
+              onKeyDown={(e) => {
+                if ((e.key === 'Enter' || e.key === ' ') && group.rating < 10) {
+                  const next = group.rating + 1;
+                  setSliderValue(next);
+                  onRatingChange(group.id, next);
+                }
+              }}
+              sx={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                borderRadius: '50%', padding: '4px', color: 'action.active',
+                cursor: group.rating >= 10 ? 'default' : 'pointer',
+                opacity: group.rating >= 10 ? 0.38 : 1,
+                '&:hover': { backgroundColor: group.rating >= 10 ? 'transparent' : 'action.hover' },
+              }}
+            >
+              <AddIcon fontSize="small" />
+            </Box>
+          </Box>
           <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' }, whiteSpace: 'nowrap' }}>
             {completedCount}/{group.tasks.length} tasks
           </Typography>
@@ -202,13 +270,14 @@ export default function SphereGroup({
               Current State Rating
             </Typography>
             <Slider
-              value={group.rating}
+              value={sliderValue}
               min={1}
               max={10}
               step={1}
               marks
               valueLabelDisplay="auto"
-              onChange={(_, value) => onRatingChange(group.id, value as number)}
+              onChange={(_, value) => setSliderValue(value as number)}
+              onChangeCommitted={(_, value) => onRatingChange(group.id, value as number)}
             />
           </Box>
         )}
@@ -234,7 +303,7 @@ export default function SphereGroup({
                           const val = e.target.value === '' ? null : Number(e.target.value);
                           onGoalEstimationChange?.(group.id, goal.id, val);
                         }}
-                        inputProps={{ min: 1, style: { width: 36 } }}
+                        slotProps={{ htmlInput: { min: 1, style: { width: 36 } } }}
                         sx={{ width: { xs: 60, sm: 72 } }}
                       />
                       <IconButton edge="end" size="small" onClick={() => onGoalDelete(group.id, goal.id)}>
@@ -274,30 +343,15 @@ export default function SphereGroup({
             </Typography>
             <List dense>
               {group.tasks.map((task) => (
-                <ListItem
+                <TaskItem
                   key={task.id}
-                  secondaryAction={
-                    <IconButton edge="end" size="small" onClick={() => onTaskDelete(group.id, task.id)}>
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  }
-                >
-                  <ListItemIcon sx={{ minWidth: 32 }}>
-                    <Checkbox
-                      edge="start"
-                      checked={task.completed}
-                      onChange={() => onTaskToggle(group.id, task.id)}
-                      size="small"
-                    />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={task.title}
-                    sx={{
-                      textDecoration: task.completed ? 'line-through' : 'none',
-                      opacity: task.completed ? 0.6 : 1,
-                    }}
-                  />
-                </ListItem>
+                  task={task}
+                  onToggle={() => onTaskToggle(group.id, task.id)}
+                  onDelete={() => onTaskDelete(group.id, task.id)}
+                  onSubtaskAdd={(taskId, title) => onSubtaskAdd?.(group.id, taskId, title)}
+                  onSubtaskToggle={(taskId, subtaskId) => onSubtaskToggle?.(group.id, taskId, subtaskId)}
+                  onSubtaskDelete={(taskId, subtaskId) => onSubtaskDelete?.(group.id, taskId, subtaskId)}
+                />
               ))}
             </List>
             <Box sx={{ display: 'flex', gap: 1 }}>

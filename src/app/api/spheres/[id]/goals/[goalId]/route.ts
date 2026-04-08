@@ -17,7 +17,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
     const sphere = await Sphere.findOneAndUpdate(
       { id, userId: session.user.id },
       { $pull: { goals: { id: goalId } } },
-      { returnDocument: 'after' },
+      { new: true },
     ).lean();
     if (!sphere) return NextResponse.json({ error: 'Sphere not found' }, { status: 404 });
     return NextResponse.json(sphere);
@@ -42,7 +42,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     const sphere = await Sphere.findOneAndUpdate(
       { id, userId: session.user.id, 'goals.id': goalId },
       { $set: updateFields },
-      { returnDocument: 'after' },
+      { new: true },
     ).lean();
     if (!sphere) return NextResponse.json({ error: 'Goal not found' }, { status: 404 });
     return NextResponse.json(sphere);

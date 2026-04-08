@@ -2,6 +2,7 @@ export interface Task {
   id: string;
   title: string;
   completed: boolean;
+  subtasks: Task[];
 }
 export interface Goal {
   id: string;

@@ -43,7 +43,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
     const sphere = await Sphere.findOneAndUpdate(
       { id, userId: session.user.id },
       { $pull: { tasks: { id: taskId } } },
-      { returnDocument: 'after' },
+      { new: true },
     ).lean();
     if (!sphere) return NextResponse.json({ error: 'Sphere not found' }, { status: 404 });
     return NextResponse.json(sphere);
