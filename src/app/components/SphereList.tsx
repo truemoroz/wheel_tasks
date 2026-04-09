@@ -30,6 +30,35 @@ function updateTaskInTree(tasks: LifeSphereGroup['tasks'], taskId: string, patch
   );
 }
 
+/** Recursively add a subtask to a parent anywhere in the tree */
+function addSubtaskInTree(
+  tasks: LifeSphereGroup['tasks'],
+  parentId: string,
+  newSubtask: LifeSphereGroup['tasks'][0],
+): LifeSphereGroup['tasks'] {
+  return tasks.map((t) =>
+    t.id === parentId
+      ? { ...t, subtasks: [...(t.subtasks ?? []), newSubtask] }
+      : { ...t, subtasks: addSubtaskInTree(t.subtasks ?? [], parentId, newSubtask) },
+  );
+}
+
+/** Recursively remove a task (and its descendants) anywhere in the tree */
+function removeTaskFromTree(tasks: LifeSphereGroup['tasks'], id: string): LifeSphereGroup['tasks'] {
+  return tasks
+    .filter((t) => t.id !== id)
+    .map((t) => ({ ...t, subtasks: removeTaskFromTree(t.subtasks ?? [], id) }));
+}
+
+/** Find a task anywhere in the tree */
+function findTaskInTree(tasks: LifeSphereGroup['tasks'], id: string): LifeSphereGroup['tasks'][0] | undefined {
+  for (const t of tasks) {
+    if (t.id === id) return t;
+    const found = findTaskInTree(t.subtasks ?? [], id);
+    if (found) return found;
+  }
+}
+
 export default function SphereList() {
   const [spheres, setSpheres] = useState<LifeSphereGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,9 +70,27 @@ export default function SphereList() {
   useEffect(() => {
     fetch('/api/spheres')
       .then((res) => res.json())
-      .then((data) => {
+      .then(async (data) => {
         setSpheres(data);
         setLoading(false);
+
+        // Apply sphere customisations from the landing page (Google OAuth sign-up flow)
+        try {
+          const raw = localStorage.getItem('pendingSphereRatings');
+          if (raw) {
+            localStorage.removeItem('pendingSphereRatings');
+            const spheres = JSON.parse(raw);
+            const res = await fetch('/api/spheres/apply-pending', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ spheres }),
+            });
+            if (res.ok) {
+              const updated = await res.json();
+              setSpheres(updated);
+            }
+          }
+        } catch { /* ignore */ }
       })
       .catch(() => {
         setError('Failed to load spheres from server.');
@@ -242,18 +289,12 @@ export default function SphereList() {
 
   const handleSubtaskAdd = async (groupId: string, taskId: string, title: string) => {
     const tempId = `st-${Date.now()}`;
-    // Optimistic update
+    const newSubtask = { id: tempId, title, completed: false, significance: 5, recurring: false, subtasks: [] };
+    // Optimistic update — works at any depth
     setSpheres((prev) =>
       prev.map((s) =>
         s.id === groupId
-          ? {
-              ...s,
-              tasks: s.tasks.map((t) =>
-                t.id === taskId
-                  ? { ...t, subtasks: [...(t.subtasks ?? []), { id: tempId, title, completed: false, subtasks: [] }] }
-                  : t,
-              ),
-            }
+          ? { ...s, tasks: addSubtaskInTree(s.tasks, taskId, newSubtask) }
           : s,
       ),
     );
@@ -271,29 +312,21 @@ export default function SphereList() {
   const handleSubtaskToggle = async (groupId: string, taskId: string, subtaskId: string) => {
     const sphere = spheres.find((s) => s.id === groupId);
     if (!sphere) return;
-    const task = sphere.tasks.find((t) => t.id === taskId);
-    if (!task) return;
-    const subtask = task.subtasks?.find((st) => st.id === subtaskId);
+    const subtask = findTaskInTree(sphere.tasks, subtaskId);
     if (!subtask) return;
-    // Optimistic update
+    const completed = !subtask.completed;
+    // Optimistic update — works at any depth
     setSpheres((prev) =>
       prev.map((s) =>
         s.id === groupId
-          ? {
-              ...s,
-              tasks: s.tasks.map((t) =>
-                t.id === taskId
-                  ? { ...t, subtasks: (t.subtasks ?? []).map((st) => (st.id === subtaskId ? { ...st, completed: !st.completed } : st)) }
-                  : t,
-              ),
-            }
+          ? { ...s, tasks: updateTaskInTree(s.tasks, subtaskId, { completed }) }
           : s,
       ),
     );
     const res = await fetch(`/api/spheres/${groupId}/tasks/${taskId}/subtasks/${subtaskId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ completed: !subtask.completed }),
+      body: JSON.stringify({ completed }),
     });
     if (res.ok) {
       const updated = await res.json();
@@ -302,16 +335,11 @@ export default function SphereList() {
   };
 
   const handleSubtaskDelete = async (groupId: string, taskId: string, subtaskId: string) => {
-    // Optimistic update
+    // Optimistic update — works at any depth
     setSpheres((prev) =>
       prev.map((s) =>
         s.id === groupId
-          ? {
-              ...s,
-              tasks: s.tasks.map((t) =>
-                t.id === taskId ? { ...t, subtasks: (t.subtasks ?? []).filter((st) => st.id !== subtaskId) } : t,
-              ),
-            }
+          ? { ...s, tasks: removeTaskFromTree(s.tasks, subtaskId) }
           : s,
       ),
     );

@@ -35,6 +35,41 @@ export function ColorModeProvider({ children }: { children: ReactNode }) {
             createTheme({
                 palette: {
                     mode,
+                    ...(mode === 'dark'
+                        ? {
+                              primary: {
+                                  // main: '#90caf9',
+                                main: '#7729ef',
+                              },
+                              secondary: {
+                                  main: '#f48fb1',
+                              },
+                              background: {
+                                  default: '#222222',
+                                  paper: '#1e1e1e',
+                              },
+                              error: { main: '#f44336' },
+                              warning: { main: '#ffa726' },
+                              success: { main: '#66bb6a' },
+                              info: { main: '#29b6f6' },
+                          }
+                        : {
+                              primary: {
+                                  main: '#7729ef',
+                                  // main: '#1976d2',
+                              },
+                              secondary: {
+                                  main: '#dc004e',
+                              },
+                              background: {
+                                  default: '#f5f5f5',
+                                  paper: '#ffffff',
+                              },
+                              error: { main: '#d32f2f' },
+                              warning: { main: '#ed6c02' },
+                              success: { main: '#2e7d32' },
+                              info: { main: '#0288d1' },
+                          }),
                 },
             }),
         [mode],

@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
@@ -9,13 +9,20 @@ import TextField from '@mui/material/TextField';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Tooltip from '@mui/material/Tooltip';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Popover from '@mui/material/Popover';
+import Divider from '@mui/material/Divider';
 import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
+import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
+import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import DeleteIcon from '@mui/icons-material/Delete';
 import RepeatIcon from '@mui/icons-material/Repeat';
+import RepeatOneIcon from '@mui/icons-material/RepeatOne';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import SubdirectoryArrowRightIcon from '@mui/icons-material/SubdirectoryArrowRight';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { Task } from '@/app/types/todo';
 
 function getSignificanceColor(sig: number): 'error' | 'warning' | 'success' | 'default' {
@@ -27,6 +34,7 @@ function getSignificanceColor(sig: number): 'error' | 'warning' | 'success' | 'd
 interface TaskItemProps {
   task: Task;
   groupId: string;
+  depth?: number;
   onToggle: () => void;
   onDelete: () => void;
   onSignificanceChange?: (taskId: string, significance: number) => void;
@@ -40,6 +48,7 @@ interface TaskItemProps {
 export default function TaskItem({
   task,
   groupId,
+  depth = 0,
   onToggle,
   onDelete,
   onSignificanceChange,
@@ -52,6 +61,20 @@ export default function TaskItem({
   const [showAdd, setShowAdd] = useState(false);
   const [newSubtask, setNewSubtask] = useState('');
   const [justLogged, setJustLogged] = useState(false);
+  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+  const [sigAnchor, setSigAnchor] = useState<null | HTMLElement>(null);
+  const sigTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const openSig = (e: React.MouseEvent<HTMLElement>) => {
+    if (sigTimer.current) clearTimeout(sigTimer.current);
+    setSigAnchor(e.currentTarget);
+  };
+  const closeSig = () => {
+    sigTimer.current = setTimeout(() => setSigAnchor(null), 150);
+  };
+  const cancelCloseSig = () => {
+    if (sigTimer.current) clearTimeout(sigTimer.current);
+  };
 
   const subtasks = task.subtasks ?? [];
   const completedSubtasks = subtasks.filter((s) => s.completed).length;
@@ -73,42 +96,63 @@ export default function TaskItem({
     setTimeout(() => setJustLogged(false), 1500);
   };
 
-  const significanceControls = (
-    <>
-      <Tooltip title="Decrease significance">
-        <span>
-          <IconButton size="small" aria-label="decrease significance" disabled={sig <= 1}
-            onClick={() => onSignificanceChange?.(task.id, sig - 1)}>
-            <RemoveIcon sx={{ fontSize: 14 }} />
+  const renderSignificanceControls = (id: string, value: number) => {
+    const color = getSignificanceColor(value);
+    return (
+      <>
+        <Tooltip title="Hover to change significance">
+          <Chip
+            label={`🏆${value}`}
+            variant="outlined"
+            color={color}
+            size="small"
+            onMouseEnter={openSig}
+            onMouseLeave={closeSig}
+            sx={{ height: 20, fontSize: '0.65rem', '& .MuiChip-label': { px: 0.75 }, minWidth: 36, cursor: 'default' }}
+          />
+        </Tooltip>
+        <Popover
+          open={Boolean(sigAnchor)}
+          anchorEl={sigAnchor}
+          onClose={() => setSigAnchor(null)}
+          anchorOrigin={{ vertical: 'center', horizontal: 'center' }}
+          transformOrigin={{ vertical: 'center', horizontal: 'center' }}
+          disableAutoFocus
+          disableEnforceFocus
+          slotProps={{
+            paper: {
+              onMouseEnter: cancelCloseSig,
+              onMouseLeave: closeSig,
+              sx: { display: 'flex', alignItems: 'center', p: 0.25 },
+            },
+          }}
+        >
+          <IconButton size="small" disabled={value <= 1} color={color}
+            onClick={() => onSignificanceChange?.(id, value - 1)}>
+            <ArrowLeftIcon sx={{ fontSize: 24 }} />
           </IconButton>
-        </span>
-      </Tooltip>
-      <Tooltip title={`Significance: ${sig}/10`}>
-        <Chip
-          label={`★${sig}`}
-          color={getSignificanceColor(sig)}
-          size="small"
-          sx={{ height: 20, fontSize: '0.65rem', '& .MuiChip-label': { px: 0.75 }, minWidth: 36 }}
-        />
-      </Tooltip>
-      <Tooltip title="Increase significance">
-        <span>
-          <IconButton size="small" aria-label="increase significance" disabled={sig >= 10}
-            onClick={() => onSignificanceChange?.(task.id, sig + 1)}>
-            <AddIcon sx={{ fontSize: 14 }} />
+          <Chip
+            label={`🏆${value}`}
+            variant="outlined"
+            color={color}
+            size="small"
+            sx={{ height: 20, fontSize: '0.65rem', '& .MuiChip-label': { px: 0.75 }, minWidth: 36 }}
+          />
+          <IconButton size="small" disabled={value >= 10} color={color}
+            onClick={() => onSignificanceChange?.(id, value + 1)}>
+            <ArrowRightIcon sx={{ fontSize: 24 }} />
           </IconButton>
-        </span>
-      </Tooltip>
-    </>
-  );
+        </Popover>
+      </>
+    );
+  };
 
   return (
     <>
       <ListItem
         secondaryAction={
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            {significanceControls}
-
+            {renderSignificanceControls(task.id, sig)}
             {/* Log button — only for recurring tasks */}
             {recurring && (
               <Tooltip title={justLogged ? 'Logged!' : 'Log — count in history'}>
@@ -124,26 +168,6 @@ export default function TaskItem({
               </Tooltip>
             )}
 
-            {/* Recurring toggle */}
-            <Tooltip title={recurring ? 'Make one-time task' : 'Make recurring task'}>
-              <IconButton
-                size="small"
-                aria-label="toggle recurring"
-                onClick={() => onRecurringToggle?.(task.id)}
-                color={recurring ? 'primary' : 'default'}
-              >
-                <RepeatIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-
-            {/* Subtask add toggle */}
-            <Tooltip title={showAdd ? 'Cancel' : 'Add subtask'}>
-              <IconButton size="small" aria-label="add subtask" onClick={() => setShowAdd((v) => !v)}
-                color={showAdd ? 'primary' : 'default'}>
-                <AddIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-
             {subtasks.length > 0 && (
               <Chip
                 label={`${completedSubtasks}/${subtasks.length}`}
@@ -153,13 +177,43 @@ export default function TaskItem({
               />
             )}
 
-            <IconButton edge="end" size="small" onClick={onDelete}>
-              <DeleteIcon fontSize="small" />
+            {/* Three-dot menu */}
+            <IconButton edge="end" size="small" onClick={(e) => setMenuAnchor(e.currentTarget)}>
+              <MoreVertIcon fontSize="small" />
             </IconButton>
+            <Menu
+              anchorEl={menuAnchor}
+              open={Boolean(menuAnchor)}
+              onClose={() => setMenuAnchor(null)}
+              slotProps={{ paper: { sx: { minWidth: 200 } } }}
+            >
+              <MenuItem onClick={() => { setShowAdd((v) => !v); setMenuAnchor(null); }}>
+                <ListItemIcon>
+                  <AddIcon fontSize="small" color={showAdd ? 'primary' : 'inherit'} />
+                </ListItemIcon>
+                {showAdd ? 'Cancel subtask' : 'Add subtask'}
+              </MenuItem>
+              <MenuItem onClick={() => { onRecurringToggle?.(task.id); setMenuAnchor(null); }}>
+                <ListItemIcon>
+                  {recurring ? <RepeatOneIcon fontSize="small" color="primary" /> : <RepeatIcon fontSize="small" />}
+                </ListItemIcon>
+                {recurring ? 'Make one-time' : 'Make recurring'}
+              </MenuItem>
+              <Divider />
+              <MenuItem onClick={() => { onDelete(); setMenuAnchor(null); }} sx={{ color: 'error.main' }}>
+                <ListItemIcon>
+                  <DeleteIcon fontSize="small" color="error" />
+                </ListItemIcon>
+                Delete
+              </MenuItem>
+            </Menu>
           </Box>
         }
       >
         <ListItemIcon sx={{ minWidth: 32 }}>
+          {depth > 0 && (
+            <SubdirectoryArrowRightIcon sx={{ fontSize: 14, color: 'text.secondary', mr: 0.5 }} />
+          )}
           {recurring ? (
             <Tooltip title="Recurring task">
               <RepeatIcon fontSize="small" color="primary" sx={{ ml: '2px' }} />
@@ -198,12 +252,11 @@ export default function TaskItem({
         </Box>
       )}
 
-      {/* Subtasks */}
+      {/* Subtasks — rendered recursively */}
       {subtasks.map((subtask) => (
-        <ListItem
+        <Box
           key={subtask.id}
           sx={{
-            pl: 4,
             borderLeft: '3px solid',
             borderColor: subtask.completed ? 'action.disabled' : 'primary.main',
             ml: 2,
@@ -212,56 +265,21 @@ export default function TaskItem({
             borderRadius: '0 4px 4px 0',
             width: 'calc(100% - 16px)',
           }}
-          secondaryAction={
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Tooltip title="Decrease significance">
-                <span>
-                  <IconButton size="small" aria-label="decrease significance"
-                    disabled={(subtask.significance ?? 5) <= 1}
-                    onClick={() => onSignificanceChange?.(subtask.id, (subtask.significance ?? 5) - 1)}>
-                    <RemoveIcon sx={{ fontSize: 14 }} />
-                  </IconButton>
-                </span>
-              </Tooltip>
-              <Tooltip title={`Significance: ${subtask.significance ?? 5}/10`}>
-                <Chip
-                  label={`★${subtask.significance ?? 5}`}
-                  color={getSignificanceColor(subtask.significance ?? 5)}
-                  size="small"
-                  sx={{ height: 20, fontSize: '0.65rem', '& .MuiChip-label': { px: 0.75 }, minWidth: 36 }}
-                />
-              </Tooltip>
-              <Tooltip title="Increase significance">
-                <span>
-                  <IconButton size="small" aria-label="increase significance"
-                    disabled={(subtask.significance ?? 5) >= 10}
-                    onClick={() => onSignificanceChange?.(subtask.id, (subtask.significance ?? 5) + 1)}>
-                    <AddIcon sx={{ fontSize: 14 }} />
-                  </IconButton>
-                </span>
-              </Tooltip>
-              <IconButton edge="end" size="small" onClick={() => onSubtaskDelete?.(task.id, subtask.id)}>
-                <DeleteIcon fontSize="small" />
-              </IconButton>
-            </Box>
-          }
         >
-          <ListItemIcon sx={{ minWidth: 28 }}>
-            <SubdirectoryArrowRightIcon sx={{ fontSize: 14, color: 'text.secondary', mr: 0.5 }} />
-            <Checkbox
-              edge="start"
-              checked={subtask.completed}
-              onChange={() => onSubtaskToggle?.(task.id, subtask.id)}
-              size="small"
-              sx={{ p: 0.5 }}
-            />
-          </ListItemIcon>
-          <ListItemText
-            primary={subtask.title}
-            slotProps={{ primary: { variant: 'body2' } }}
-            sx={{ textDecoration: subtask.completed ? 'line-through' : 'none', opacity: subtask.completed ? 0.5 : 1 }}
+          <TaskItem
+            task={subtask}
+            groupId={groupId}
+            depth={depth + 1}
+            onToggle={() => onSubtaskToggle?.(task.id, subtask.id)}
+            onDelete={() => onSubtaskDelete?.(task.id, subtask.id)}
+            onSignificanceChange={onSignificanceChange}
+            onRecurringToggle={onRecurringToggle}
+            onLog={onLog}
+            onSubtaskAdd={onSubtaskAdd}
+            onSubtaskToggle={onSubtaskToggle}
+            onSubtaskDelete={onSubtaskDelete}
           />
-        </ListItem>
+        </Box>
       ))}
     </>
   );

@@ -1,12 +1,12 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import Typography from '@mui/material/Typography';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Chip from '@mui/material/Chip';
-import Slider from '@mui/material/Slider';
+import Popover from '@mui/material/Popover';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -76,7 +76,20 @@ export default function SphereGroup({
   const [newGoal, setNewGoal] = useState('');
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(group.name);
-  const [sliderValue, setSliderValue] = useState(group.rating);
+  const [ratingAnchor, setRatingAnchor] = useState<null | HTMLElement>(null);
+  const [titleHovered, setTitleHovered] = useState(false);
+  const ratingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const openRating = (e: React.MouseEvent<HTMLElement>) => {
+    if (ratingTimer.current) clearTimeout(ratingTimer.current);
+    setRatingAnchor(e.currentTarget);
+  };
+  const closeRating = () => {
+    ratingTimer.current = setTimeout(() => setRatingAnchor(null), 150);
+  };
+  const cancelCloseRating = () => {
+    if (ratingTimer.current) clearTimeout(ratingTimer.current);
+  };
 
   const handleSaveName = () => {
     const trimmed = nameValue.trim();
@@ -173,6 +186,8 @@ export default function SphereGroup({
           ) : (
             <Box
               sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}
+              onMouseEnter={() => setTitleHovered(true)}
+              onMouseLeave={() => setTitleHovered(false)}
             >
               <Typography variant="h6" sx={{ flexGrow: 1, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
                 {group.name}
@@ -191,6 +206,7 @@ export default function SphereGroup({
                   borderRadius: '50%',
                   padding: '4px',
                   color: 'action.active',
+                  visibility: titleHovered ? 'visible' : 'hidden',
                   '&:hover': { backgroundColor: 'action.hover' },
                 }}
               >
@@ -199,69 +215,90 @@ export default function SphereGroup({
             </Box>
           )}
           <Box sx={{ display: 'flex', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
-            <Box
-              component="span"
-              role="button"
-              tabIndex={group.rating <= 1 ? -1 : 0}
-              aria-label="decrease rating"
-              aria-disabled={group.rating <= 1}
-              onClick={() => {
-                if (group.rating <= 1) return;
-                const next = group.rating - 1;
-                setSliderValue(next);
-                onRatingChange(group.id, next);
-              }}
-              onKeyDown={(e) => {
-                if ((e.key === 'Enter' || e.key === ' ') && group.rating > 1) {
-                  const next = group.rating - 1;
-                  setSliderValue(next);
-                  onRatingChange(group.id, next);
-                }
-              }}
-              sx={{
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                borderRadius: '50%', padding: '4px', color: 'action.active',
-                cursor: group.rating <= 1 ? 'default' : 'pointer',
-                opacity: group.rating <= 1 ? 0.38 : 1,
-                '&:hover': { backgroundColor: group.rating <= 1 ? 'transparent' : 'action.hover' },
-              }}
-            >
-              <RemoveIcon fontSize="small" />
-            </Box>
             <Chip
               label={`${group.rating}/10`}
               color={getRatingColor(group.rating)}
               size="small"
+              onMouseEnter={openRating}
+              onMouseLeave={closeRating}
+              sx={{ cursor: 'default' }}
             />
-            <Box
-              component="span"
-              role="button"
-              tabIndex={group.rating >= 10 ? -1 : 0}
-              aria-label="increase rating"
-              aria-disabled={group.rating >= 10}
-              onClick={() => {
-                if (group.rating >= 10) return;
-                const next = group.rating + 1;
-                setSliderValue(next);
-                onRatingChange(group.id, next);
-              }}
-              onKeyDown={(e) => {
-                if ((e.key === 'Enter' || e.key === ' ') && group.rating < 10) {
-                  const next = group.rating + 1;
-                  setSliderValue(next);
-                  onRatingChange(group.id, next);
-                }
-              }}
-              sx={{
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                borderRadius: '50%', padding: '4px', color: 'action.active',
-                cursor: group.rating >= 10 ? 'default' : 'pointer',
-                opacity: group.rating >= 10 ? 0.38 : 1,
-                '&:hover': { backgroundColor: group.rating >= 10 ? 'transparent' : 'action.hover' },
+            <Popover
+              open={Boolean(ratingAnchor)}
+              anchorEl={ratingAnchor}
+              onClose={() => setRatingAnchor(null)}
+              anchorOrigin={{ vertical: 'center', horizontal: 'center' }}
+              transformOrigin={{ vertical: 'center', horizontal: 'center' }}
+              disableAutoFocus
+              disableEnforceFocus
+              slotProps={{
+                paper: {
+                  onMouseEnter: cancelCloseRating,
+                  onMouseLeave: closeRating,
+                  sx: { display: 'flex', alignItems: 'center', p: 0.25 },
+                },
               }}
             >
-              <AddIcon fontSize="small" />
-            </Box>
+              <Box
+                component="span"
+                role="button"
+                tabIndex={group.rating <= 1 ? -1 : 0}
+                aria-label="decrease rating"
+                aria-disabled={group.rating <= 1}
+                onClick={() => {
+                  if (group.rating <= 1) return;
+                  const next = group.rating - 1;
+                  onRatingChange(group.id, next);
+                }}
+                onKeyDown={(e) => {
+                  if ((e.key === 'Enter' || e.key === ' ') && group.rating > 1) {
+                    const next = group.rating - 1;
+                    onRatingChange(group.id, next);
+                  }
+                }}
+                sx={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  borderRadius: '50%', padding: '4px', color: 'action.active',
+                  cursor: group.rating <= 1 ? 'default' : 'pointer',
+                  opacity: group.rating <= 1 ? 0.38 : 1,
+                  '&:hover': { backgroundColor: group.rating <= 1 ? 'transparent' : 'action.hover' },
+                }}
+              >
+                <RemoveIcon fontSize="small" />
+              </Box>
+              <Chip
+                label={`${group.rating}/10`}
+                color={getRatingColor(group.rating)}
+                size="small"
+              />
+              <Box
+                component="span"
+                role="button"
+                tabIndex={group.rating >= 10 ? -1 : 0}
+                aria-label="increase rating"
+                aria-disabled={group.rating >= 10}
+                onClick={() => {
+                  if (group.rating >= 10) return;
+                  const next = group.rating + 1;
+                  onRatingChange(group.id, next);
+                }}
+                onKeyDown={(e) => {
+                  if ((e.key === 'Enter' || e.key === ' ') && group.rating < 10) {
+                    const next = group.rating + 1;
+                    onRatingChange(group.id, next);
+                  }
+                }}
+                sx={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  borderRadius: '50%', padding: '4px', color: 'action.active',
+                  cursor: group.rating >= 10 ? 'default' : 'pointer',
+                  opacity: group.rating >= 10 ? 0.38 : 1,
+                  '&:hover': { backgroundColor: group.rating >= 10 ? 'transparent' : 'action.hover' },
+                }}
+              >
+                <AddIcon fontSize="small" />
+              </Box>
+            </Popover>
           </Box>
           <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' }, whiteSpace: 'nowrap' }}>
             {completedCount}/{group.tasks.length} tasks
@@ -270,23 +307,23 @@ export default function SphereGroup({
       </AccordionSummary>
       <AccordionDetails>
         {/* Rating Slider */}
-        {(view === 'full' || view === 'goals') && (
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle2" gutterBottom>
-              Current State Rating
-            </Typography>
-            <Slider
-              value={sliderValue}
-              min={1}
-              max={10}
-              step={1}
-              marks
-              valueLabelDisplay="auto"
-              onChange={(_, value) => setSliderValue(value as number)}
-              onChangeCommitted={(_, value) => onRatingChange(group.id, value as number)}
-            />
-          </Box>
-        )}
+        {/*{(view === 'full' || view === 'goals') && (*/}
+        {/*  <Box sx={{ mb: 3 }}>*/}
+        {/*    <Typography variant="subtitle2" gutterBottom>*/}
+        {/*      Current State Rating*/}
+        {/*    </Typography>*/}
+        {/*    <Slider*/}
+        {/*      value={sliderValue}*/}
+        {/*      min={1}*/}
+        {/*      max={10}*/}
+        {/*      step={1}*/}
+        {/*      marks*/}
+        {/*      valueLabelDisplay="auto"*/}
+        {/*      onChange={(_, value) => setSliderValue(value as number)}*/}
+        {/*      onChangeCommitted={(_, value) => onRatingChange(group.id, value as number)}*/}
+        {/*    />*/}
+        {/*  </Box>*/}
+        {/*)}*/}
         {(view === 'full' || view === 'goals') && <Divider sx={{ mb: 2 }} />}
         {/* Goals */}
         {(view === 'full' || view === 'goals') && (
@@ -300,18 +337,19 @@ export default function SphereGroup({
                   key={goal.id}
                   secondaryAction={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <TextField
-                        size="small"
-                        type="number"
-                        placeholder="Est."
-                        value={goal.estimation ?? ''}
-                        onChange={(e) => {
-                          const val = e.target.value === '' ? null : Number(e.target.value);
-                          onGoalEstimationChange?.(group.id, goal.id, val);
-                        }}
-                        slotProps={{ htmlInput: { min: 1, style: { width: 36 } } }}
-                        sx={{ width: { xs: 60, sm: 72 } }}
-                      />
+                      {/*<TextField*/}
+                      {/*  size="small"*/}
+                      {/*  helperText="Estimation"*/}
+                      {/*  // type="number"*/}
+                      {/*  placeholder="Est."*/}
+                      {/*  value={goal.estimation ?? ''}*/}
+                      {/*  onChange={(e) => {*/}
+                      {/*    const val = e.target.value === '' ? null : Number(e.target.value);*/}
+                      {/*    onGoalEstimationChange?.(group.id, goal.id, val);*/}
+                      {/*  }}*/}
+                      {/*  slotProps={{ htmlInput: { min: 1, style: { width: 36 } } }}*/}
+                      {/*  sx={{ width: { xs: 60, sm: 72 } }}*/}
+                      {/*/>*/}
                       <IconButton edge="end" size="small" onClick={() => onGoalDelete(group.id, goal.id)}>
                         <DeleteIcon fontSize="small" />
                       </IconButton>

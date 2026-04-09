@@ -6,51 +6,7 @@ import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import Link from 'next/link';
-
-const spheres = [
-	{
-		emoji: '💼',
-		title: 'Career & Business',
-		desc: 'Professional growth, job satisfaction, and achievement of work goals.',
-	},
-	{
-		emoji: '💰',
-		title: 'Finance',
-		desc: 'Financial security, savings, investments, and overall monetary well-being.',
-	},
-	{
-		emoji: '❤️',
-		title: 'Health & Fitness',
-		desc: 'Physical vitality, exercise habits, nutrition, and energy levels.',
-	},
-	{
-		emoji: '👨‍👩‍👧',
-		title: 'Family & Relationships',
-		desc: 'Quality of close relationships, intimacy, and social connections.',
-	},
-	{
-		emoji: '🧠',
-		title: 'Personal Development',
-		desc: 'Learning, skills growth, mindset, and self-improvement.',
-	},
-	{
-		emoji: '🎮',
-		title: 'Fun & Recreation',
-		desc: 'Hobbies, leisure time, creativity, and activities that bring joy.',
-	},
-	{
-		emoji: '🏡',
-		title: 'Physical Environment',
-		desc: 'Home, workspace, surroundings, and your relationship with your space.',
-	},
-	{
-		emoji: '🌿',
-		title: 'Spirituality & Purpose',
-		desc: 'Sense of meaning, values, mindfulness, and connection to something greater.',
-	},
-];
-
-export default function Home() {
+import SpheresRater from '@/app/components/SpheresRater';export default function Home() {
 	return (
 		<Container maxWidth="md" sx={{ py: 8 }}>
 			{/* Hero */}
@@ -74,11 +30,11 @@ export default function Home() {
 					gap={2}
 					flexWrap="wrap"
 				>
-					<Link href="/register" style={{ textDecoration: 'none' }}>
+					<a href="#rate-your-spheres" style={{ textDecoration: 'none' }}>
 						<Button variant="contained" size="large">
-							Get Started — It&apos;s Free
+							Rate Your Spheres — It&apos;s Free
 						</Button>
-					</Link>
+					</a>
 					<Link href="/login" style={{ textDecoration: 'none' }}>
 						<Button variant="outlined" size="large">
 							Sign In
@@ -164,55 +120,35 @@ export default function Home() {
 				</Grid>
 			</Box>
 
-			{/* 8 Spheres */}
-			<Box mb={6}>
+			{/* Interactive sphere rater */}
+			<Box id="rate-your-spheres" mb={6} sx={{ scrollMarginTop: 80 }}>
 				<Typography variant="h5" fontWeight="bold" gutterBottom>
-					The 8 Spheres of Life
+					Rate Your Spheres
 				</Typography>
-				<Grid container spacing={2}>
-					{spheres.map(({ emoji, title, desc }) => (
-						<Grid size={{ xs: 12, sm: 6 }} key={title}>
-							<Paper variant="outlined" sx={{ p: 2.5, height: '100%' }}>
-								<Typography
-									variant="h5"
-									component="span"
-									mr={1}
-									sx={{ fontSize: '1.5rem' }}
-								>
-									{emoji}
-								</Typography>
-								<Typography
-									variant="subtitle1"
-									fontWeight="medium"
-									component="span"
-								>
-									{title}
-								</Typography>
-								<Typography
-									variant="body2"
-									color="text.secondary"
-									mt={0.5}
-									gutterBottom
-								>
-									{desc}
-								</Typography>
-							</Paper>
-						</Grid>
-					))}
-				</Grid>
+				<Typography color="text.secondary" lineHeight={1.8} mb={3}>
+					Give each area of your life an honest score right now. You can also rename any sphere to better reflect your own life.
+				</Typography>
+				<SpheresRater />
+				<Box textAlign="center" mt={3}>
+					<Link href="/register" style={{ textDecoration: 'none' }}>
+						<Button variant="contained" size="large">
+							Save your ratings and create a wheel
+						</Button>
+					</Link>
+				</Box>
 			</Box>
 
 			{/* CTA */}
-			<Box textAlign="center">
-				<Typography variant="h6" gutterBottom>
-					Ready to take a look at your life from above?
-				</Typography>
-				<Link href="/register" style={{ textDecoration: 'none' }}>
-					<Button variant="contained" size="large">
-						Create Your Wheel
-					</Button>
-				</Link>
-			</Box>
+			{/*<Box textAlign="center">*/}
+			{/*	<Typography variant="h6" gutterBottom>*/}
+			{/*		Ready to take a look at your life from above?*/}
+			{/*	</Typography>*/}
+			{/*	<Link href="/register" style={{ textDecoration: 'none' }}>*/}
+			{/*		<Button variant="contained" size="large">*/}
+			{/*			Rate Your Spheres*/}
+			{/*		</Button>*/}
+			{/*	</Link>*/}
+			{/*</Box>*/}
 		</Container>
 	);
 }
