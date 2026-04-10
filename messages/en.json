@@ -145,6 +145,23 @@
     "sphere7Desc": "Home, workspace, surroundings, and your relationship with your space.",
     "sphere8Title": "Spirituality & Purpose",
     "sphere8Desc": "Sense of meaning, values, mindfulness, and connection to something greater."
+  },
+  "Feedback": {
+    "buttonTooltip": "Send a proposal",
+    "title": "Send a Proposal",
+    "subtitle": "Have an idea or suggestion? Drop me a message below.",
+    "telegramPrompt": "The fastest way to reach me — chat directly in Telegram:",
+    "openInTelegram": "Open chat in Telegram",
+    "or": "or leave a message here",
+    "formFallback": "Don't have Telegram? Send a message below:",
+    "nameLabel": "Your name",
+    "namePlaceholder": "Optional",
+    "messageLabel": "Message",
+    "messagePlaceholder": "Describe your idea or proposal…",
+    "sendButton": "Send",
+    "successMessage": "Message sent! I'll get back to you soon.",
+    "sendAnother": "Send another",
+    "errorMessage": "Something went wrong. Please try again."
   }
 }
 

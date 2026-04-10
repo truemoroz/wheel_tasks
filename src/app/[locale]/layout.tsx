@@ -5,6 +5,7 @@ import { routing } from '@/i18n/routing';
 import ThemeRegistry from '@/app/components/ThemeRegistry';
 import AppBarComponent from '@/app/components/AppBar';
 import AuthProvider from '@/app/components/AuthProvider';
+import FeedbackChat from '@/app/components/FeedbackChat';
 
 export default async function LocaleLayout({
   children,
@@ -24,6 +25,7 @@ export default async function LocaleLayout({
         <AuthProvider>
           <AppBarComponent />
           {children}
+          <FeedbackChat />
         </AuthProvider>
       </ThemeRegistry>
     </NextIntlClientProvider>
