@@ -1,5 +1,6 @@
 'use client';
 import { useState, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
@@ -58,6 +59,7 @@ export default function TaskItem({
   onSubtaskToggle,
   onSubtaskDelete,
 }: TaskItemProps) {
+  const t = useTranslations('TaskItem');
   const [showAdd, setShowAdd] = useState(false);
   const [newSubtask, setNewSubtask] = useState('');
   const [justLogged, setJustLogged] = useState(false);
@@ -100,7 +102,7 @@ export default function TaskItem({
     const color = getSignificanceColor(value);
     return (
       <>
-        <Tooltip title="Hover to change significance">
+        <Tooltip title={t('hoverToChangeSignificance')}>
           <Chip
             label={`🏆${value}`}
             variant="outlined"
@@ -155,7 +157,7 @@ export default function TaskItem({
             {renderSignificanceControls(task.id, sig)}
             {/* Log button — only for recurring tasks */}
             {recurring && (
-              <Tooltip title={justLogged ? 'Logged!' : 'Log — count in history'}>
+              <Tooltip title={justLogged ? t('logged') : t('logHistory')}>
                 <IconButton
                   size="small"
                   aria-label="log recurring task"
@@ -191,21 +193,20 @@ export default function TaskItem({
                 <ListItemIcon>
                   <AddIcon fontSize="small" color={showAdd ? 'primary' : 'inherit'} />
                 </ListItemIcon>
-                {showAdd ? 'Cancel subtask' : 'Add subtask'}
+                {showAdd ? t('cancelSubtask') : t('addSubtask')}
               </MenuItem>
               <MenuItem onClick={() => { onRecurringToggle?.(task.id); setMenuAnchor(null); }}>
                 <ListItemIcon>
                   {recurring ? <RepeatOneIcon fontSize="small" color="primary" /> : <RepeatIcon fontSize="small" />}
                 </ListItemIcon>
-                {recurring ? 'Make one-time' : 'Make recurring'}
+                {recurring ? t('makeOneTime') : t('makeRecurring')}
               </MenuItem>
               <Divider />
               <MenuItem onClick={() => { onDelete(); setMenuAnchor(null); }} sx={{ color: 'error.main' }}>
                 <ListItemIcon>
                   <DeleteIcon fontSize="small" color="error" />
                 </ListItemIcon>
-                Delete
-              </MenuItem>
+                {t('delete')}              </MenuItem>
             </Menu>
           </Box>
         }
@@ -215,7 +216,7 @@ export default function TaskItem({
             <SubdirectoryArrowRightIcon sx={{ fontSize: 14, color: 'text.secondary', mr: 0.5 }} />
           )}
           {recurring ? (
-            <Tooltip title="Recurring task">
+            <Tooltip title={t('recurringTask')}>
               <RepeatIcon fontSize="small" color="primary" sx={{ ml: '2px' }} />
             </Tooltip>
           ) : (
@@ -236,7 +237,7 @@ export default function TaskItem({
         <Box sx={{ pl: 5, pr: 7, mb: 0.5, display: 'flex', gap: 1 }}>
           <TextField
             size="small"
-            placeholder="Add subtask…"
+            placeholder={t('addSubtaskPlaceholder')}
             value={newSubtask}
             onChange={(e) => setNewSubtask(e.target.value)}
             onKeyDown={(e) => {

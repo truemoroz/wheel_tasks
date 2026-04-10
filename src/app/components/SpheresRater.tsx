@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
@@ -20,16 +21,8 @@ interface SphereEntry {
   rating: number;
 }
 
-const defaultSpheres: SphereEntry[] = [
-  { id: '1', emoji: '💼', title: 'Career & Business', desc: 'Professional growth, job satisfaction, and achievement of work goals.', rating: 5 },
-  { id: '2', emoji: '💰', title: 'Finance', desc: 'Financial security, savings, investments, and overall monetary well-being.', rating: 5 },
-  { id: '3', emoji: '❤️', title: 'Health & Fitness', desc: 'Physical vitality, exercise habits, nutrition, and energy levels.', rating: 5 },
-  { id: '4', emoji: '👨‍👩‍👧', title: 'Family & Relationships', desc: 'Quality of close relationships, intimacy, and social connections.', rating: 5 },
-  { id: '5', emoji: '🧠', title: 'Personal Development', desc: 'Learning, skills growth, mindset, and self-improvement.', rating: 5 },
-  { id: '6', emoji: '🎮', title: 'Fun & Recreation', desc: 'Hobbies, leisure time, creativity, and activities that bring joy.', rating: 5 },
-  { id: '7', emoji: '🏡', title: 'Physical Environment', desc: 'Home, workspace, surroundings, and your relationship with your space.', rating: 5 },
-  { id: '8', emoji: '🌿', title: 'Spirituality & Purpose', desc: 'Sense of meaning, values, mindfulness, and connection to something greater.', rating: 5 },
-];
+const defaultSpheres: SphereEntry[] = [];   // replaced by locale-aware list inside component
+
 
 function getRatingColor(r: number): 'error' | 'warning' | 'success' {
   if (r <= 3) return 'error';
@@ -38,6 +31,19 @@ function getRatingColor(r: number): 'error' | 'warning' | 'success' {
 }
 
 export default function SpheresRater() {
+  const t = useTranslations('SpheresRater');
+
+  const defaultSpheres: SphereEntry[] = [
+    { id: '1', emoji: '💼', title: t('sphere1Title'), desc: t('sphere1Desc'), rating: 5 },
+    { id: '2', emoji: '💰', title: t('sphere2Title'), desc: t('sphere2Desc'), rating: 5 },
+    { id: '3', emoji: '❤️', title: t('sphere3Title'), desc: t('sphere3Desc'), rating: 5 },
+    { id: '4', emoji: '👨‍👩‍👧', title: t('sphere4Title'), desc: t('sphere4Desc'), rating: 5 },
+    { id: '5', emoji: '🧠', title: t('sphere5Title'), desc: t('sphere5Desc'), rating: 5 },
+    { id: '6', emoji: '🎮', title: t('sphere6Title'), desc: t('sphere6Desc'), rating: 5 },
+    { id: '7', emoji: '🏡', title: t('sphere7Title'), desc: t('sphere7Desc'), rating: 5 },
+    { id: '8', emoji: '🌿', title: t('sphere8Title'), desc: t('sphere8Desc'), rating: 5 },
+  ];
+
   const [spheres, setSpheres] = useState<SphereEntry[]>(defaultSpheres);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
@@ -135,7 +141,7 @@ export default function SpheresRater() {
                     >
                       {sphere.title}
                     </Typography>
-                    <Tooltip title="Rename">
+                    <Tooltip title={t('rename')}>
                       <IconButton
                         size="small"
                         onClick={() => startEdit(sphere)}

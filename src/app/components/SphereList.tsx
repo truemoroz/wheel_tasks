@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -60,6 +61,7 @@ function findTaskInTree(tasks: LifeSphereGroup['tasks'], id: string): LifeSphere
 }
 
 export default function SphereList() {
+  const t = useTranslations('SphereList');
   const [spheres, setSpheres] = useState<LifeSphereGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -93,11 +95,10 @@ export default function SphereList() {
         } catch { /* ignore */ }
       })
       .catch(() => {
-        setError('Failed to load spheres from server.');
+        setError(t('failedToLoad'));
         setLoading(false);
       });
-  }, []);
-
+  }, [t]);
   const sortedSpheres = useMemo(
     () => [...spheres].sort((a, b) => goalSort === 'asc' ? a.rating - b.rating : b.rating - a.rating),
     [spheres, goalSort],
@@ -377,9 +378,9 @@ export default function SphereList() {
           onClick={() => setWheelCollapsed((v) => !v)}
         >
           <Typography variant="h6" fontWeight="bold">
-            Wheel of Life
+            {t('wheelOfLife')}
           </Typography>
-          <Tooltip title={wheelCollapsed ? 'Expand diagram' : 'Collapse diagram'}>
+          <Tooltip title={wheelCollapsed ? t('expandDiagram') : t('collapseDiagram')}>
             <IconButton size="small">
               {wheelCollapsed ? <ExpandMoreIcon fontSize="small" /> : <ExpandLessIcon fontSize="small" />}
             </IconButton>
@@ -415,14 +416,14 @@ export default function SphereList() {
           }}
         >
           <Typography variant="h6" fontWeight="bold" sx={{ flexGrow: 1 }}>
-            Goals
+            {t('goals')}
           </Typography>
-          <Tooltip title={goalSort === 'asc' ? 'Sort: high first' : 'Sort: low first'}>
+          <Tooltip title={goalSort === 'asc' ? t('sortHighFirstShort') : t('sortLowFirstShort')}>
             <IconButton size="small" onClick={() => setGoalSort((v) => v === 'asc' ? 'desc' : 'asc')} color="primary">
               {goalSort === 'asc' ? <ArrowUpwardIcon fontSize="small" /> : <ArrowDownwardIcon fontSize="small" />}
             </IconButton>
           </Tooltip>
-          <Tooltip title={goalsCollapsed ? 'Expand goals' : 'Collapse goals'}>
+          <Tooltip title={goalsCollapsed ? t('expandGoals') : t('collapseGoals')}>
             <IconButton size="small" onClick={() => setGoalsCollapsed((v) => !v)}>
               {goalsCollapsed ? <ExpandMoreIcon fontSize="small" /> : <ExpandLessIcon fontSize="small" />}
             </IconButton>
@@ -442,7 +443,7 @@ export default function SphereList() {
         >
           {goalsCollapsed ? (
             <>
-              <Tooltip title="Expand goals">
+              <Tooltip title={t('expandGoals')}>
                 <IconButton size="small" onClick={() => setGoalsCollapsed((v) => !v)}>
                   <ChevronRightIcon />
                 </IconButton>
@@ -463,14 +464,14 @@ export default function SphereList() {
           ) : (
             <>
               <Typography variant="h6" fontWeight="bold" sx={{ flexGrow: 1 }}>
-                Goals
+                {t('goals')}
               </Typography>
-              <Tooltip title={goalSort === 'asc' ? 'Sort by rating: high first' : 'Sort by rating: low first'}>
+              <Tooltip title={goalSort === 'asc' ? t('sortHighFirst') : t('sortLowFirst')}>
                 <IconButton size="small" onClick={() => setGoalSort((v) => v === 'asc' ? 'desc' : 'asc')} color="primary">
                   {goalSort === 'asc' ? <ArrowUpwardIcon fontSize="small" /> : <ArrowDownwardIcon fontSize="small" />}
                 </IconButton>
               </Tooltip>
-              <Tooltip title="Collapse goals">
+              <Tooltip title={t('collapseGoals')}>
                 <IconButton size="small" onClick={() => setGoalsCollapsed((v) => !v)}>
                   <ChevronLeftIcon />
                 </IconButton>
@@ -525,7 +526,7 @@ export default function SphereList() {
       <Box sx={{ minWidth: 0, width: '100%' }}>
         <Box sx={{ mb: 1, px: { xs: 0, sm: 1 } }}>
           <Typography variant="h6" fontWeight="bold">
-            Tasks
+            {t('tasks')}
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>

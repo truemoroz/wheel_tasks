@@ -1,5 +1,6 @@
 'use client';
 import { useState, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -72,6 +73,7 @@ export default function SphereGroup({
   view = 'full',
   goalSort = 'default',
 }: SphereGroupProps) {
+  const t = useTranslations('SphereGroup');
   const [newTask, setNewTask] = useState('');
   const [newGoal, setNewGoal] = useState('');
   const [editingName, setEditingName] = useState(false);
@@ -158,7 +160,7 @@ export default function SphereGroup({
                 tabIndex={0}
                 onClick={handleSaveName}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSaveName(); }}
-                aria-label="save name"
+                aria-label={t('saveName')}
                 sx={{
                   display: 'inline-flex', alignItems: 'center', cursor: 'pointer',
                   borderRadius: '50%', padding: '4px', color: 'primary.main',
@@ -173,7 +175,7 @@ export default function SphereGroup({
                 tabIndex={0}
                 onClick={handleCancelName}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleCancelName(); }}
-                aria-label="cancel edit"
+                aria-label={t('cancelEdit')}
                 sx={{
                   display: 'inline-flex', alignItems: 'center', cursor: 'pointer',
                   borderRadius: '50%', padding: '4px', color: 'action.active',
@@ -198,7 +200,7 @@ export default function SphereGroup({
                 tabIndex={0}
                 onClick={(e) => { e.stopPropagation(); setEditingName(true); }}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); setEditingName(true); } }}
-                aria-label="edit name"
+                aria-label={t('editName')}
                 sx={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -243,7 +245,7 @@ export default function SphereGroup({
                 component="span"
                 role="button"
                 tabIndex={group.rating <= 1 ? -1 : 0}
-                aria-label="decrease rating"
+                aria-label={t('decreaseRating')}
                 aria-disabled={group.rating <= 1}
                 onClick={() => {
                   if (group.rating <= 1) return;
@@ -275,7 +277,7 @@ export default function SphereGroup({
                 component="span"
                 role="button"
                 tabIndex={group.rating >= 10 ? -1 : 0}
-                aria-label="increase rating"
+                aria-label={t('increaseRating')}
                 aria-disabled={group.rating >= 10}
                 onClick={() => {
                   if (group.rating >= 10) return;
@@ -301,7 +303,7 @@ export default function SphereGroup({
             </Popover>
           </Box>
           <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' }, whiteSpace: 'nowrap' }}>
-            {completedCount}/{group.tasks.length} tasks
+            {t('tasksCount', { completed: completedCount, total: group.tasks.length })}
           </Typography>
         </Box>
       </AccordionSummary>
@@ -329,7 +331,7 @@ export default function SphereGroup({
         {(view === 'full' || view === 'goals') && (
           <>
             <Typography variant="subtitle2" gutterBottom>
-              Goals
+              {t('goals')}
             </Typography>
             <List dense>
               {sortedGoals.map((goal) => (
@@ -366,7 +368,7 @@ export default function SphereGroup({
             <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
               <TextField
                 size="small"
-                placeholder="Add a goal..."
+                placeholder={t('addGoalPlaceholder')}
                 value={newGoal}
                 onChange={(e) => setNewGoal(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddGoal()}
@@ -383,7 +385,7 @@ export default function SphereGroup({
         {(view === 'full' || view === 'tasks') && (
           <>
             <Typography variant="subtitle2" gutterBottom>
-              Tasks
+              {t('tasks')}
             </Typography>
             <List dense>
               {group.tasks.map((task) => (
@@ -405,7 +407,7 @@ export default function SphereGroup({
             <Box sx={{ display: 'flex', gap: 1 }}>
               <TextField
                 size="small"
-                placeholder="Add a task..."
+                placeholder={t('addTaskPlaceholder')}
                 value={newTask}
                 onChange={(e) => setNewTask(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
