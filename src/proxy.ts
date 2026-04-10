@@ -18,7 +18,8 @@ export function proxy(req: NextRequest) {
   const isPublic =
     strippedPath === '/' ||
     strippedPath.startsWith('/login') ||
-    strippedPath.startsWith('/register');
+    strippedPath.startsWith('/register') ||
+    strippedPath.startsWith('/changelog');
 
   // Detect the locale already in the URL (fall back to default)
   const locale = pathname.match(LOCALES_RE)?.[1] ?? routing.defaultLocale;
