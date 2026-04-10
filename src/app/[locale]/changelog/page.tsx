@@ -17,6 +17,14 @@ export default function ChangelogPage() {
 
   const releases = [
     {
+      version: '1.4',
+      tag: 'feature' as Tag,
+      titleKey: 'v14Title',
+      dateKey: 'v14Date',
+      headingKey: 'v14Heading',
+      bodyKey: 'v14Body',
+    },
+    {
       version: '1.3',
       tag: 'feature' as Tag,
       titleKey: 'v13Title',
