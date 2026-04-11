@@ -99,12 +99,15 @@
     "collapseDiagram": "Свернуть диаграмму",
     "goals": "Цели",
     "tasks": "Задачи",
+    "spheres": "Сферы",
     "sortHighFirst": "Сортировать: сначала высокий",
     "sortLowFirst": "Сортировать: сначала низкий",
     "expandGoals": "Развернуть цели",
     "collapseGoals": "Свернуть цели",
     "sortHighFirstShort": "Сорт.: высокий",
     "sortLowFirstShort": "Сорт.: низкий",
+    "sidebarView": "Вид с боковой панелью",
+    "listView": "Вид списком",
     "failedToLoad": "Не удалось загрузить сферы с сервера."
   },
   "SphereGroup": {

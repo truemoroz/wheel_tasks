@@ -52,6 +52,9 @@ interface SphereGroupProps {
   view?: 'full' | 'goals' | 'tasks';
   /** Sort order for goals. Defaults to 'default'. */
   goalSort?: 'default' | 'asc' | 'desc';
+  /** Controlled expanded state for the accordion. */
+  expanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
 }
 
 export default function SphereGroup({
@@ -72,6 +75,8 @@ export default function SphereGroup({
   onSubtaskDelete,
   view = 'full',
   goalSort = 'default',
+  expanded,
+  onExpandedChange,
 }: SphereGroupProps) {
   const t = useTranslations('SphereGroup');
   const [newTask, setNewTask] = useState('');
@@ -135,7 +140,11 @@ export default function SphereGroup({
         return goalSort === 'asc' ? aVal - bVal : bVal - aVal;
       });
   return (
-    <Accordion sx={{ maxWidth: '100%', overflow: 'hidden' }}>
+    <Accordion
+      sx={{ maxWidth: '100%', overflow: 'hidden' }}
+      {...(expanded !== undefined ? { expanded } : {})}
+      {...(onExpandedChange ? { onChange: (_: React.SyntheticEvent, isExpanded: boolean) => onExpandedChange(isExpanded) } : {})}
+    >
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, width: '100%', mr: 2, overflow: 'hidden' }}>
           {editingName ? (
@@ -218,7 +227,7 @@ export default function SphereGroup({
           )}
           <Box sx={{ display: 'flex', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
             <Chip
-              label={`${group.rating}/10`}
+              label={group.rating}
               color={getRatingColor(group.rating)}
               size="small"
               onMouseEnter={openRating}
@@ -269,7 +278,7 @@ export default function SphereGroup({
                 <RemoveIcon fontSize="small" />
               </Box>
               <Chip
-                label={`${group.rating}/10`}
+                label={group.rating}
                 color={getRatingColor(group.rating)}
                 size="small"
               />
@@ -388,7 +397,7 @@ export default function SphereGroup({
               {t('tasks')}
             </Typography>
             <List dense>
-              {group.tasks.map((task) => (
+              {[...group.tasks].sort((a, b) => (b.significance ?? 5) - (a.significance ?? 5)).map((task) => (
                 <TaskItem
                   key={task.id}
                   task={task}

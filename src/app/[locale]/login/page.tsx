@@ -59,7 +59,7 @@ function LoginForm() {
               <path fill="#34A853" d="M24 47c5.5 0 10.12-1.82 13.5-4.94l-7.18-5.57C28.56 38.13 26.4 39 24 39c-6.33 0-11.71-4.11-13.4-9.68l-8.08 6.4C6.07 43.52 14.82 47 24 47z"/>
             </svg>
           )}
-          sx={{ mb: 2, textTransform: 'none', fontWeight: 500 }}
+          sx={{ mb: 2, textTransform: 'none', fontWeight: 500, color: 'text.primary', borderColor: 'divider', '&:hover': { borderColor: 'text.primary' } }}
         >
           {t('continueWithGoogle')}
         </Button>

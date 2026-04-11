@@ -8,8 +8,9 @@ import Alert from '@mui/material/Alert';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import Collapse from '@mui/material/Collapse';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import Fade from '@mui/material/Fade';
+import Paper from '@mui/material/Paper';
+import Chip from '@mui/material/Chip';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
@@ -65,9 +66,8 @@ export default function SphereList() {
   const [spheres, setSpheres] = useState<LifeSphereGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [goalsCollapsed, setGoalsCollapsed] = useState(false);
   const [wheelCollapsed, setWheelCollapsed] = useState(false);
-  const [goalSort, setGoalSort] = useState<'asc' | 'desc'>('asc');
+  const [selectedSphereId, setSelectedSphereId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/spheres')
@@ -99,9 +99,11 @@ export default function SphereList() {
         setLoading(false);
       });
   }, [t]);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
   const sortedSpheres = useMemo(
-    () => [...spheres].sort((a, b) => goalSort === 'asc' ? a.rating - b.rating : b.rating - a.rating),
-    [spheres, goalSort],
+    () => [...spheres].sort((a, b) => sortOrder === 'asc' ? a.rating - b.rating : b.rating - a.rating),
+    [spheres, sortOrder],
   );
 
   const handleRatingChange = async (id: string, rating: number) => {
@@ -363,196 +365,82 @@ export default function SphereList() {
     return <Alert severity="error">{error}</Alert>;
   }
 
+  const selectedSphere = sortedSpheres.find((s) => s.id === selectedSphereId) ?? sortedSpheres[0] ?? null;
+
+  const sharedProps = (group: LifeSphereGroup) => ({
+    group,
+    view: 'full' as const,
+    onRatingChange: handleRatingChange,
+    onNameChange: handleNameChange,
+    onTaskToggle: handleTaskToggle,
+    onTaskAdd: handleTaskAdd,
+    onTaskDelete: handleTaskDelete,
+    onTaskSignificanceChange: handleTaskSignificanceChange,
+    onTaskRecurringToggle: handleTaskRecurringToggle,
+    onTaskLog: handleTaskLog,
+    onGoalAdd: handleGoalAdd,
+    onGoalDelete: handleGoalDelete,
+    onGoalEstimationChange: handleGoalEstimationChange,
+    onSubtaskAdd: handleSubtaskAdd,
+    onSubtaskToggle: handleSubtaskToggle,
+    onSubtaskDelete: handleSubtaskDelete,
+  });
+
   return (
-    <>
-      <Box sx={{ mb: 1 }}>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            cursor: 'pointer',
-            userSelect: 'none',
-            width: 'fit-content',
-            gap: 0.5,
-          }}
-          onClick={() => setWheelCollapsed((v) => !v)}
-        >
-          <Typography variant="h6" fontWeight="bold">
-            {t('wheelOfLife')}
-          </Typography>
+    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '340px minmax(0, 800px)' }, gap: 2, alignItems: 'start', maxWidth: 1200, mx: 'auto', width: '100%' }}>
+      {/* Left panel: wheel (collapsible, no title) + sphere selector cards */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
           <Tooltip title={wheelCollapsed ? t('expandDiagram') : t('collapseDiagram')}>
-            <IconButton size="small">
+            <IconButton size="small" onClick={() => setWheelCollapsed((v) => !v)}>
               {wheelCollapsed ? <ExpandMoreIcon fontSize="small" /> : <ExpandLessIcon fontSize="small" />}
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={sortOrder === 'asc' ? t('sortHighFirst') : t('sortLowFirst')}>
+            <IconButton size="small" onClick={() => setSortOrder((v) => v === 'asc' ? 'desc' : 'asc')} color="primary">
+              {sortOrder === 'asc' ? <ArrowUpwardIcon fontSize="small" /> : <ArrowDownwardIcon fontSize="small" />}
             </IconButton>
           </Tooltip>
         </Box>
         <Collapse in={!wheelCollapsed}>
-          <WheelOfLife spheres={sortedSpheres} />
-        </Collapse>
-      </Box>
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: {
-            xs: '1fr',
-            lg: goalsCollapsed ? '40px 1fr' : '1fr 1fr',
-          },
-          gap: { xs: 1, sm: 2 },
-          alignItems: 'start',
-          overflow: 'hidden',
-          minWidth: 0,
-        }}
-      >
-      {/* Goals column */}
-      <Box sx={{ minWidth: 0, width: '100%' }}>
-
-        {/* ── Mobile header (xs..lg): always horizontal row, ExpandMore/Less ── */}
-        <Box
-          sx={{
-            display: { xs: 'flex', lg: 'none' },
-            alignItems: 'center',
-            mb: 1,
-            gap: 1,
-          }}
-        >
-          <Typography variant="h6" fontWeight="bold" sx={{ flexGrow: 1 }}>
-            {t('goals')}
-          </Typography>
-          <Tooltip title={goalSort === 'asc' ? t('sortHighFirstShort') : t('sortLowFirstShort')}>
-            <IconButton size="small" onClick={() => setGoalSort((v) => v === 'asc' ? 'desc' : 'asc')} color="primary">
-              {goalSort === 'asc' ? <ArrowUpwardIcon fontSize="small" /> : <ArrowDownwardIcon fontSize="small" />}
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={goalsCollapsed ? t('expandGoals') : t('collapseGoals')}>
-            <IconButton size="small" onClick={() => setGoalsCollapsed((v) => !v)}>
-              {goalsCollapsed ? <ExpandMoreIcon fontSize="small" /> : <ExpandLessIcon fontSize="small" />}
-            </IconButton>
-          </Tooltip>
-        </Box>
-
-        {/* ── PC header (lg+): horizontal when expanded, vertical column when collapsed ── */}
-        <Box
-          sx={{
-            display: { xs: 'none', lg: 'flex' },
-            flexDirection: goalsCollapsed ? 'column' : 'row',
-            alignItems: 'center',
-            mb: 1,
-            px: 1,
-            gap: 1,
-          }}
-        >
-          {goalsCollapsed ? (
-            <>
-              <Tooltip title={t('expandGoals')}>
-                <IconButton size="small" onClick={() => setGoalsCollapsed((v) => !v)}>
-                  <ChevronRightIcon />
-                </IconButton>
-              </Tooltip>
-              <Typography
-                variant="h6"
-                fontWeight="bold"
-                sx={{
-                  writingMode: 'vertical-rl',
-                  textOrientation: 'mixed',
-                  transform: 'rotate(180deg)',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                Goals
-              </Typography>
-            </>
-          ) : (
-            <>
-              <Typography variant="h6" fontWeight="bold" sx={{ flexGrow: 1 }}>
-                {t('goals')}
-              </Typography>
-              <Tooltip title={goalSort === 'asc' ? t('sortHighFirst') : t('sortLowFirst')}>
-                <IconButton size="small" onClick={() => setGoalSort((v) => v === 'asc' ? 'desc' : 'asc')} color="primary">
-                  {goalSort === 'asc' ? <ArrowUpwardIcon fontSize="small" /> : <ArrowDownwardIcon fontSize="small" />}
-                </IconButton>
-              </Tooltip>
-              <Tooltip title={t('collapseGoals')}>
-                <IconButton size="small" onClick={() => setGoalsCollapsed((v) => !v)}>
-                  <ChevronLeftIcon />
-                </IconButton>
-              </Tooltip>
-            </>
-          )}
-        </Box>
-
-        {/* ── Content: vertical collapse on mobile, horizontal on PC ── */}
-        <Box
-          sx={(theme) => ({
-            display: 'grid',
-            overflow: 'hidden',
-            [theme.breakpoints.down('lg')]: {
-              gridTemplateRows: goalsCollapsed ? '0fr' : '1fr',
-              transition: 'grid-template-rows 0.3s ease',
-            },
-            [theme.breakpoints.up('lg')]: {
-              gridTemplateColumns: goalsCollapsed ? '0fr' : '1fr',
-              transition: 'grid-template-columns 0.3s ease',
-            },
-          })}
-        >
-          <Box sx={{ overflow: 'hidden', minWidth: 0, minHeight: 0 }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              {sortedSpheres.map((group) => (
-                <SphereGroup
-                  key={group.id}
-                  group={group}
-                  view="goals"
-                  onRatingChange={handleRatingChange}
-                  onNameChange={handleNameChange}
-                  onTaskToggle={handleTaskToggle}
-                  onTaskAdd={handleTaskAdd}
-                  onTaskDelete={handleTaskDelete}
-                  onTaskSignificanceChange={handleTaskSignificanceChange}
-                  onTaskRecurringToggle={handleTaskRecurringToggle}
-                  onTaskLog={handleTaskLog}
-                  onGoalAdd={handleGoalAdd}
-                  onGoalDelete={handleGoalDelete}
-                  onGoalEstimationChange={handleGoalEstimationChange}
-                  onSubtaskAdd={handleSubtaskAdd}
-                  onSubtaskToggle={handleSubtaskToggle}
-                  onSubtaskDelete={handleSubtaskDelete}
-                />
-              ))}
-            </Box>
+          <Box sx={{ mb: 0.5 }}>
+            <WheelOfLife spheres={sortedSpheres} />
           </Box>
-        </Box>
-      </Box>
-      {/* Tasks column */}
-      <Box sx={{ minWidth: 0, width: '100%' }}>
-        <Box sx={{ mb: 1, px: { xs: 0, sm: 1 } }}>
-          <Typography variant="h6" fontWeight="bold">
-            {t('tasks')}
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {sortedSpheres.map((group) => (
-            <SphereGroup
+        </Collapse>
+        {sortedSpheres.map((group) => {
+          const isSelected = group.id === (selectedSphere?.id ?? null);
+          const color = group.rating <= 3 ? 'error' : group.rating <= 6 ? 'warning' : 'success';
+          return (
+            <Paper
               key={group.id}
-              group={group}
-              view="tasks"
-              onRatingChange={handleRatingChange}
-              onNameChange={handleNameChange}
-              onTaskToggle={handleTaskToggle}
-              onTaskAdd={handleTaskAdd}
-              onTaskDelete={handleTaskDelete}
-              onTaskSignificanceChange={handleTaskSignificanceChange}
-              onTaskRecurringToggle={handleTaskRecurringToggle}
-              onTaskLog={handleTaskLog}
-              onGoalAdd={handleGoalAdd}
-              onGoalDelete={handleGoalDelete}
-              onSubtaskAdd={handleSubtaskAdd}
-              onSubtaskToggle={handleSubtaskToggle}
-              onSubtaskDelete={handleSubtaskDelete}
-            />
-          ))}
-        </Box>
+              onClick={() => setSelectedSphereId(group.id)}
+              sx={{
+                p: 1.5, cursor: 'pointer', border: 2,
+                borderColor: isSelected ? 'primary.main' : 'transparent',
+                '&:hover': { borderColor: isSelected ? 'primary.main' : 'divider' },
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography sx={{ flexGrow: 1, fontWeight: isSelected ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {group.name}
+                </Typography>
+                <Chip label={group.rating} color={color} size="small" />
+              </Box>
+            </Paper>
+          );
+        })}
+      </Box>
+
+      {/* Right panel: selected sphere full content */}
+      <Box>
+        {selectedSphere && (
+          <Fade key={selectedSphere.id} in timeout={250}>
+            <div>
+              <SphereGroup {...sharedProps(selectedSphere)} expanded={true} />
+            </div>
+          </Fade>
+        )}
       </Box>
     </Box>
-    </>
   );
 }

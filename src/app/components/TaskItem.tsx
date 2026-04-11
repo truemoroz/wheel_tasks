@@ -210,6 +210,13 @@ export default function TaskItem({
             </Menu>
           </Box>
         }
+        sx={depth === 0 ? {
+          borderLeft: '3px solid',
+          borderColor: task.completed && !task.recurring ? 'action.disabled' : 'primary.main',
+          bgcolor: 'action.hover',
+          borderRadius: '0 4px 4px 0',
+          mb: 0.25,
+        } : undefined}
       >
         <ListItemIcon sx={{ minWidth: 32 }}>
           {depth > 0 && (
@@ -258,12 +265,7 @@ export default function TaskItem({
         <Box
           key={subtask.id}
           sx={{
-            borderLeft: '3px solid',
-            borderColor: subtask.completed ? 'action.disabled' : 'primary.main',
             ml: 2,
-            mb: 0.25,
-            bgcolor: 'action.hover',
-            borderRadius: '0 4px 4px 0',
             width: 'calc(100% - 16px)',
           }}
         >

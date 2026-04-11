@@ -99,12 +99,15 @@
     "collapseDiagram": "Collapse diagram",
     "goals": "Goals",
     "tasks": "Tasks",
+    "spheres": "Spheres",
     "sortHighFirst": "Sort by rating: high first",
     "sortLowFirst": "Sort by rating: low first",
     "expandGoals": "Expand goals",
     "collapseGoals": "Collapse goals",
     "sortHighFirstShort": "Sort: high first",
     "sortLowFirstShort": "Sort: low first",
+    "sidebarView": "Sidebar view",
+    "listView": "List view",
     "failedToLoad": "Failed to load spheres from server."
   },
   "SphereGroup": {
