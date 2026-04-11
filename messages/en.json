@@ -153,6 +153,16 @@
     "sphere8Title": "Spirituality & Purpose",
     "sphere8Desc": "Sense of meaning, values, mindfulness, and connection to something greater."
   },
+  "AgentChat": {
+    "buttonTooltip": "AI task assistant",
+    "title": "AI Assistant",
+    "emptyState": "Ask me to create tasks or goals for any of your life spheres.",
+    "inputPlaceholder": "e.g. Add a task to exercise 3× a week…",
+    "thinking": "Thinking…",
+    "taskCreated": "Task created",
+    "goalCreated": "Goal created",
+    "errorMessage": "Something went wrong. Please try again."
+  },
   "Feedback": {
     "buttonTooltip": "Send a proposal",
     "title": "Send a Proposal",

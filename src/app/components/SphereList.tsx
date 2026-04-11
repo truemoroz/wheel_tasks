@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
+import { useSpheresRefetch } from '@/app/components/SpheresRefetchContext';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -63,6 +64,7 @@ function findTaskInTree(tasks: LifeSphereGroup['tasks'], id: string): LifeSphere
 
 export default function SphereList() {
   const t = useTranslations('SphereList');
+  const { version } = useSpheresRefetch();
   const [spheres, setSpheres] = useState<LifeSphereGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,6 +72,7 @@ export default function SphereList() {
   const [selectedSphereId, setSelectedSphereId] = useState<string | null>(null);
 
   useEffect(() => {
+    setLoading(true);
     fetch('/api/spheres')
       .then((res) => res.json())
       .then(async (data) => {
@@ -98,7 +101,7 @@ export default function SphereList() {
         setError(t('failedToLoad'));
         setLoading(false);
       });
-  }, [t]);
+  }, [t, version]);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const sortedSpheres = useMemo(

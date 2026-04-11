@@ -9,12 +9,15 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ai-sdk/google": "^3.0.61",
+    "@ai-sdk/react": "^3.0.160",
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^7.3.8",
     "@mui/material": "^7.3.8",
     "@mui/material-nextjs": "^7.3.8",
+    "ai": "^6.0.158",
     "bcryptjs": "^3.0.3",
     "mongoose": "^9.2.3",
     "next": "16.0.10",
@@ -22,7 +25,8 @@
     "next-intl": "^4.9.0",
     "react": "19.2.1",
     "react-dom": "19.2.1",
-    "recharts": "^3.8.1"
+    "recharts": "^3.8.1",
+    "zod": "^4.3.6"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

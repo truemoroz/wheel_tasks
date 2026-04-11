@@ -6,6 +6,8 @@ import ThemeRegistry from '@/app/components/ThemeRegistry';
 import AppBarComponent from '@/app/components/AppBar';
 import AuthProvider from '@/app/components/AuthProvider';
 import FeedbackChat from '@/app/components/FeedbackChat';
+import AgentChat from '@/app/components/AgentChat';
+import { SpheresRefetchProvider } from '@/app/components/SpheresRefetchContext';
 
 export default async function LocaleLayout({
   children,
@@ -23,9 +25,12 @@ export default async function LocaleLayout({
     <NextIntlClientProvider locale={locale} messages={messages}>
       <ThemeRegistry>
         <AuthProvider>
-          <AppBarComponent />
-          {children}
-          <FeedbackChat />
+          <SpheresRefetchProvider>
+            <AppBarComponent />
+            {children}
+            <AgentChat />
+            <FeedbackChat />
+          </SpheresRefetchProvider>
         </AuthProvider>
       </ThemeRegistry>
     </NextIntlClientProvider>
