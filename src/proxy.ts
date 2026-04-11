@@ -21,6 +21,11 @@ export function proxy(req: NextRequest) {
     strippedPath.startsWith('/register') ||
     strippedPath.startsWith('/changelog');
 
+  // Auth-only public pages — redirect logged-in users away from these
+  const isAuthPage =
+    strippedPath.startsWith('/login') ||
+    strippedPath.startsWith('/register');
+
   // Detect the locale already in the URL (fall back to default)
   const locale = pathname.match(LOCALES_RE)?.[1] ?? routing.defaultLocale;
 
@@ -30,7 +35,7 @@ export function proxy(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  if (isLoggedIn && isPublic) {
+  if (isLoggedIn && isAuthPage) {
     return NextResponse.redirect(new URL(`/${locale}/todo`, req.nextUrl.origin));
   }
 

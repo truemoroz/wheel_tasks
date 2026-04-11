@@ -178,8 +178,6 @@ export default function AgentChat() {
 
           {/* Input */}
           <Box
-            component="form"
-            onSubmit={(e) => { e.preventDefault(); handleSend(); }}
             sx={{ px: 2, pb: 2, pt: 1, display: 'flex', gap: 1, alignItems: 'flex-end' }}
           >
             <TextField
@@ -199,8 +197,9 @@ export default function AgentChat() {
               }}
             />
             <IconButton
-              type="submit"
+              type="button"
               color="primary"
+              onClick={handleSend}
               disabled={isLoading || !input.trim()}
               sx={{ flexShrink: 0 }}
             >
