@@ -15,6 +15,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import AddTaskIcon from '@mui/icons-material/AddTask';
+import { useSession } from 'next-auth/react';
 import { useSpheresRefetch } from '@/app/components/SpheresRefetchContext';
 
 /** Extract plain text from a UIMessage's parts array */
@@ -32,6 +33,7 @@ function getDynamicToolParts(m: UIMessage): DynamicToolUIPart[] {
 
 export default function AgentChat() {
   const t = useTranslations('AgentChat');
+  const { status: authStatus } = useSession();
   const { triggerRefetch } = useSpheresRefetch();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
@@ -43,6 +45,8 @@ export default function AgentChat() {
   });
 
   const isLoading = status === 'submitted' || status === 'streaming';
+
+  if (authStatus !== 'authenticated') return null;
 
   const handleSend = () => {
     const text = input.trim();

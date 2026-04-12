@@ -3,7 +3,6 @@ import bcrypt from 'bcryptjs';
 import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import Sphere from '@/lib/models/Sphere';
-import { initialSpheres } from '@/app/data/initialSpheres';
 
 interface PendingSphere { id: string; name: string; rating: number; }
 
@@ -25,19 +24,12 @@ export async function POST(request: Request) {
     const user = await User.create({ email: email.toLowerCase(), password: hashed });
     const userId = user._id.toString();
 
-    // Merge custom sphere names/ratings from landing page with initial data
-    const sphereDocs = initialSpheres.map((s) => {
-      const custom: PendingSphere | undefined = customSpheres?.find((c: PendingSphere) => c.id === s.id);
-      return {
-        id: `${userId}-${s.id}`,
-        userId,
-        name: custom?.name ?? s.name,
-        rating: custom?.rating ?? s.rating,
-        goals: [],
-      };
-    });
-    await Sphere.insertMany(sphereDocs);
-    // No tasks seeded — users start with an empty task list
+    await Sphere.insertMany(customSpheres.map(({ id, ...rest }: PendingSphere) => ({
+      id: `${userId}-${id}`,
+      userId,
+      ...rest,
+      goals: [],
+    })));
 
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (error) {
