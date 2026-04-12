@@ -76,6 +76,10 @@
     "feature": "feature",
     "improvement": "improvement",
     "fix": "fix",
+    "v17Title": "Telegram Bot — Access Your Data",
+    "v17Date": "April 12, 2026",
+    "v17Heading": "Get your spheres, goals and tasks right in Telegram",
+    "v17Body": "A Telegram bot integration lets you access your Wheel of Life data without opening the app. Open the feedback widget, go to the My Bot tab, click Link Telegram Account and tap Start in Telegram. Once linked, send /spheres, /tasks, or /goals to the bot to instantly see your current ratings, goals and active tasks.",
     "v16Title": "Redesigned Todo Interface",
     "v16Date": "April 11, 2026",
     "v16Heading": "Sidebar layout with Wheel of Life",
@@ -186,7 +190,20 @@
     "sendButton": "Send",
     "successMessage": "Message sent! I'll get back to you soon.",
     "sendAnother": "Send another",
-    "errorMessage": "Something went wrong. Please try again."
+    "errorMessage": "Something went wrong. Please try again.",
+    "tabFeedback": "Feedback",
+    "tabMyBot": "My Bot",
+    "signInToLink": "Sign in to link your Telegram account and use bot commands.",
+    "botLinked": "Telegram Linked",
+    "botCommands": "Available commands in Telegram:",
+    "botNotLinked": "Connect your Telegram to access your spheres, goals and tasks via bot commands.",
+    "linkButton": "Link Telegram Account",
+    "linking": "Generating link…",
+    "openTelegramBot": "Open Bot in Telegram",
+    "unlinkButton": "Unlink account",
+    "openLinkInTelegram": "Open in Telegram to link",
+    "linkInstructions": "Tap the button to open Telegram, then press Start to complete the link. Come back and check the status.",
+    "checkStatus": "Check status"
   }
 }
 

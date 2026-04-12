@@ -38,10 +38,19 @@ interface WheelOfLifeProps {
   spheres: LifeSphereGroup[];
 }
 
-const SIZE = 360;
+const SIZE = 400;
 const CENTER = SIZE / 2;
-const MAX_RADIUS = CENTER - 48; // leave room for labels
+const MAX_RADIUS = CENTER - 56; // leave room for labels
 const LEVELS = 10;
+
+/** Split a sphere name into at most 2 balanced lines. */
+function splitLabel(name: string): [string, string?] {
+  if (name.length <= 11) return [name];
+  const words = name.split(' ');
+  if (words.length === 1) return [name];
+  const mid = Math.ceil(words.length / 2);
+  return [words.slice(0, mid).join(' '), words.slice(mid).join(' ')];
+}
 
 
 function polarToCartesian(angleDeg: number, radius: number): [number, number] {
@@ -92,7 +101,13 @@ export default function WheelOfLife({ spheres }: WheelOfLifeProps) {
     () =>
       spheres.map((sphere, i) => {
         const midAngle = (i + 0.5) * sliceAngle;
-        const [x, y] = polarToCartesian(midAngle, MAX_RADIUS + 22);
+        // Labels near top (≈0°) or bottom (≈180°) extend vertically — push them further out
+        const normAngle = ((midAngle % 360) + 360) % 360;
+        const nearTopOrBottom =
+          normAngle < 45 || normAngle > 315 ||
+          (normAngle > 135 && normAngle < 225);
+        const offset = nearTopOrBottom ? 24 : 14;
+        const [x, y] = polarToCartesian(midAngle, MAX_RADIUS + offset);
         return { x, y, name: sphere.name, rating: sphere.rating, color: ratingToColor(sphere.rating) };
       }),
     [spheres, sliceAngle],
@@ -108,7 +123,7 @@ export default function WheelOfLife({ spheres }: WheelOfLifeProps) {
   return (
     <Box sx={{ display: 'flex', justifyContent: 'center' }}>
       <Box sx={{ textAlign: 'center', width: '100%', maxWidth: SIZE }}>
-        <svg width="100%" viewBox={`0 0 ${SIZE} ${SIZE}`} style={{ display: 'block' }}>
+        <svg width="100%" viewBox={`0 0 ${SIZE} ${SIZE}`} style={{ display: 'block', overflow: 'visible' }}>
           {/* Background circle */}
           <circle
             cx={CENTER} cy={CENTER} r={MAX_RADIUS}
@@ -136,13 +151,36 @@ export default function WheelOfLife({ spheres }: WheelOfLifeProps) {
                 : midAngle < 180
                 ? 'start'
                 : 'end';
+            const lines = splitLabel(name);
+            const lineHeight = 11;
+            const totalHeight = lines.length * lineHeight;
+            const startY = y - totalHeight / 2 + 2;
             return (
               <g key={i}>
-                <text x={x} y={y - 5} textAnchor={anchor} fontSize={10} fontWeight={600} fill={textColor} fontFamily={theme.typography.fontFamily}>
-                  {name}
-                </text>
-                <text x={x} y={y + 8} textAnchor={anchor} fontSize={9} fill={color} fontFamily={theme.typography.fontFamily} fontWeight={700}>
-                  {rating}/10
+                {lines.map((line, li) => (
+                  <text
+                    key={li}
+                    x={x}
+                    y={startY + li * lineHeight}
+                    textAnchor={anchor}
+                    fontSize={9}
+                    fontWeight={600}
+                    fill={textColor}
+                    fontFamily={theme.typography.fontFamily}
+                  >
+                    {line}
+                  </text>
+                ))}
+                <text
+                  x={x}
+                  y={startY + lines.length * lineHeight + 2}
+                  textAnchor={anchor}
+                  fontSize={9}
+                  fill={color}
+                  fontFamily={theme.typography.fontFamily}
+                  fontWeight={700}
+                >
+                  {rating}
                 </text>
               </g>
             );
