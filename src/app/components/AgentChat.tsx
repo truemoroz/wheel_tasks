@@ -46,8 +46,6 @@ export default function AgentChat() {
 
   const isLoading = status === 'submitted' || status === 'streaming';
 
-  if (authStatus !== 'authenticated') return null;
-
   const handleSend = () => {
     const text = input.trim();
     if (!text || isLoading) return;
@@ -61,6 +59,8 @@ export default function AgentChat() {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, open]);
+
+  if (authStatus !== 'authenticated') return null;
 
   return (
     <Box

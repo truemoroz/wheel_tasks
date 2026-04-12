@@ -41,8 +41,6 @@ export default function FeedbackChat() {
   const [unlinking, setUnlinking] = useState(false);
   const messageRef = useRef<HTMLTextAreaElement>(null);
 
-  if (authStatus !== 'authenticated') return null;
-
   useEffect(() => {
     if (open && status === 'idle' && tab === 0) {
       setTimeout(() => messageRef.current?.focus(), 120);
@@ -60,6 +58,8 @@ export default function FeedbackChat() {
     }
     if (tab !== 1) setDeepLink(null);
   }, [open, tab, authStatus]);
+
+  if (authStatus !== 'authenticated') return null;
 
   const handleGenerateLink = async () => {
     setLinkStatus('generating');
