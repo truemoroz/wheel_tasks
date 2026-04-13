@@ -21,7 +21,11 @@ export async function PATCH(request: Request) {
       spheres.map((s) =>
         Sphere.findOneAndUpdate(
           { id: `${userId}-${s.id}`, userId },
-          { $set: { name: s.name, rating: s.rating } },
+          {
+            $set: { name: s.name, rating: s.rating },
+            $setOnInsert: { id: `${userId}-${s.id}`, userId, goals: [] },
+          },
+          { upsert: true, new: true },
         ),
       ),
     );

@@ -24,12 +24,14 @@ export async function POST(request: Request) {
     const user = await User.create({ email: email.toLowerCase(), password: hashed });
     const userId = user._id.toString();
 
-    await Sphere.insertMany(customSpheres.map(({ id, ...rest }: PendingSphere) => ({
-      id: `${userId}-${id}`,
-      userId,
-      ...rest,
-      goals: [],
-    })));
+    if (Array.isArray(customSpheres) && customSpheres.length > 0) {
+      await Sphere.insertMany(customSpheres.map(({ id, ...rest }: PendingSphere) => ({
+        id: `${userId}-${id}`,
+        userId,
+        ...rest,
+        goals: [],
+      })));
+    }
 
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (error) {
