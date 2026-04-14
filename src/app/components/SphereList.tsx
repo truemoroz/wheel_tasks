@@ -12,6 +12,10 @@ import Collapse from '@mui/material/Collapse';
 import Fade from '@mui/material/Fade';
 import Paper from '@mui/material/Paper';
 import Chip from '@mui/material/Chip';
+import SwipeableDrawer from '@mui/material/SwipeableDrawer';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
+import CloseIcon from '@mui/icons-material/Close';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
@@ -64,12 +68,15 @@ function findTaskInTree(tasks: LifeSphereGroup['tasks'], id: string): LifeSphere
 
 export default function SphereList() {
   const t = useTranslations('SphereList');
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { version } = useSpheresRefetch();
   const [spheres, setSpheres] = useState<LifeSphereGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [wheelCollapsed, setWheelCollapsed] = useState(false);
   const [selectedSphereId, setSelectedSphereId] = useState<string | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const hasLoadedOnce = useRef(false);
 
   useEffect(() => {
@@ -394,8 +401,8 @@ export default function SphereList() {
   });
 
   return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '340px minmax(0, 800px)' }, gap: 2, alignItems: 'start', maxWidth: 1200, mx: 'auto', width: '100%' }}>
-      {/* Left panel: wheel (collapsible, no title) + sphere selector cards */}
+    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '340px minmax(0, 800px)' }, gap: 2, alignItems: 'start', maxWidth: 1200, mx: 'auto', width: '100%', minWidth: 0, overflow: 'hidden' }}>
+      {/* Left panel: wheel (collapsible) + sphere selector cards */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
           <Tooltip title={wheelCollapsed ? t('expandDiagram') : t('collapseDiagram')}>
@@ -420,7 +427,10 @@ export default function SphereList() {
           return (
             <Paper
               key={group.id}
-              onClick={() => setSelectedSphereId(group.id)}
+              onClick={() => {
+                setSelectedSphereId(group.id);
+                if (isMobile) setDrawerOpen(true);
+              }}
               sx={{
                 p: 1.5, cursor: 'pointer', border: 2,
                 borderColor: isSelected ? 'primary.main' : 'transparent',
@@ -438,8 +448,8 @@ export default function SphereList() {
         })}
       </Box>
 
-      {/* Right panel: selected sphere full content */}
-      <Box>
+      {/* Right panel: desktop only */}
+      <Box sx={{ display: { xs: 'none', md: 'block' } }}>
         {selectedSphere && (
           <Fade key={selectedSphere.id} in timeout={250}>
             <div>
@@ -448,6 +458,45 @@ export default function SphereList() {
           </Fade>
         )}
       </Box>
+
+      {/* Bottom drawer: mobile only */}
+      <SwipeableDrawer
+        anchor="bottom"
+        open={isMobile && drawerOpen}
+        onOpen={() => setDrawerOpen(true)}
+        onClose={() => setDrawerOpen(false)}
+        disableSwipeToOpen
+        ModalProps={{ keepMounted: true }}
+        PaperProps={{
+          sx: {
+            borderTopLeftRadius: 16,
+            borderTopRightRadius: 16,
+            maxHeight: '85vh',
+            display: 'flex',
+            flexDirection: 'column',
+          },
+        }}
+      >
+        {/* Pull handle */}
+        <Box sx={{ display: 'flex', justifyContent: 'center', pt: 1, pb: 0.5, flexShrink: 0 }}>
+          <Box sx={{ width: 40, height: 4, borderRadius: 2, bgcolor: 'divider' }} />
+        </Box>
+        {/* Drawer header */}
+        <Box sx={{ display: 'flex', alignItems: 'center', px: 2, pb: 1, flexShrink: 0 }}>
+          <Typography variant="subtitle1" fontWeight={600} sx={{ flexGrow: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {selectedSphere?.name ?? ''}
+          </Typography>
+          <IconButton size="small" onClick={() => setDrawerOpen(false)} aria-label={t('close')}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Box>
+        {/* Drawer content */}
+        <Box sx={{ overflowY: 'auto', flexGrow: 1, px: 1, pb: 2 }}>
+          {selectedSphere && (
+            <SphereGroup {...sharedProps(selectedSphere)} expanded={true} />
+          )}
+        </Box>
+      </SwipeableDrawer>
     </Box>
   );
 }

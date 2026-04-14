@@ -120,7 +120,8 @@
     "sortLowFirstShort": "Sort: low first",
     "sidebarView": "Sidebar view",
     "listView": "List view",
-    "failedToLoad": "Failed to load spheres from server."
+    "failedToLoad": "Failed to load spheres from server.",
+    "close": "Close"
   },
   "SphereGroup": {
     "saveName": "save name",
