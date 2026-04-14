@@ -120,7 +120,8 @@
     "sortLowFirstShort": "Сорт.: низкий",
     "sidebarView": "Вид с боковой панелью",
     "listView": "Вид списком",
-    "failedToLoad": "Не удалось загрузить сферы с сервера."
+    "failedToLoad": "Не удалось загрузить сферы с сервера.",
+    "close": "Закрыть"
   },
   "SphereGroup": {
     "saveName": "сохранить название",

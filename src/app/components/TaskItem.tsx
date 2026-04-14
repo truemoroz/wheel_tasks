@@ -152,73 +152,27 @@ export default function TaskItem({
   return (
     <>
       <ListItem
-        secondaryAction={
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            {renderSignificanceControls(task.id, sig)}
-            {/* Log button — only for recurring tasks */}
-            {recurring && (
-              <Tooltip title={justLogged ? t('logged') : t('logHistory')}>
-                <IconButton
-                  size="small"
-                  aria-label="log recurring task"
-                  onClick={handleLog}
-                  color={justLogged ? 'success' : 'primary'}
-                  sx={{ transition: 'color 0.3s' }}
-                >
-                  {justLogged ? <TaskAltIcon fontSize="small" /> : <CheckCircleOutlineIcon fontSize="small" />}
-                </IconButton>
-              </Tooltip>
-            )}
-
-            {subtasks.length > 0 && (
-              <Chip
-                label={`${completedSubtasks}/${subtasks.length}`}
-                size="small"
-                variant="outlined"
-                sx={{ height: 18, fontSize: '0.65rem', '& .MuiChip-label': { px: 0.75 } }}
-              />
-            )}
-
-            {/* Three-dot menu */}
-            <IconButton edge="end" size="small" onClick={(e) => setMenuAnchor(e.currentTarget)}>
-              <MoreVertIcon fontSize="small" />
-            </IconButton>
-            <Menu
-              anchorEl={menuAnchor}
-              open={Boolean(menuAnchor)}
-              onClose={() => setMenuAnchor(null)}
-              slotProps={{ paper: { sx: { minWidth: 200 } } }}
-            >
-              <MenuItem onClick={() => { setShowAdd((v) => !v); setMenuAnchor(null); }}>
-                <ListItemIcon>
-                  <AddIcon fontSize="small" color={showAdd ? 'primary' : 'inherit'} />
-                </ListItemIcon>
-                {showAdd ? t('cancelSubtask') : t('addSubtask')}
-              </MenuItem>
-              <MenuItem onClick={() => { onRecurringToggle?.(task.id); setMenuAnchor(null); }}>
-                <ListItemIcon>
-                  {recurring ? <RepeatOneIcon fontSize="small" color="primary" /> : <RepeatIcon fontSize="small" />}
-                </ListItemIcon>
-                {recurring ? t('makeOneTime') : t('makeRecurring')}
-              </MenuItem>
-              <Divider />
-              <MenuItem onClick={() => { onDelete(); setMenuAnchor(null); }} sx={{ color: 'error.main' }}>
-                <ListItemIcon>
-                  <DeleteIcon fontSize="small" color="error" />
-                </ListItemIcon>
-                {t('delete')}              </MenuItem>
-            </Menu>
-          </Box>
-        }
-        sx={depth === 0 ? {
-          borderLeft: '3px solid',
-          borderColor: task.completed && !task.recurring ? 'action.disabled' : 'primary.main',
-          bgcolor: 'action.hover',
-          borderRadius: '0 4px 4px 0',
-          mb: 0.25,
-        } : undefined}
+        disableGutters
+        sx={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 0,
+          ...(depth === 0 ? {
+            borderLeft: '3px solid',
+            borderColor: task.completed && !task.recurring ? 'action.disabled' : 'primary.main',
+            bgcolor: 'action.hover',
+            borderRadius: '0 4px 4px 0',
+            mb: 0.25,
+            px: 1,
+            py: 0.5,
+          } : {
+            px: 0.5,
+            py: 0.25,
+          }),
+        }}
       >
-        <ListItemIcon sx={{ minWidth: 32 }}>
+        {/* Leading icon / checkbox */}
+        <ListItemIcon sx={{ minWidth: 32, flexShrink: 0, mt: '2px' }}>
           {depth > 0 && (
             <SubdirectoryArrowRightIcon sx={{ fontSize: 14, color: 'text.secondary', mr: 0.5 }} />
           )}
@@ -230,13 +184,78 @@ export default function TaskItem({
             <Checkbox edge="start" checked={task.completed} onChange={onToggle} size="small" />
           )}
         </ListItemIcon>
+
+        {/* Title — grows and clips */}
         <ListItemText
           primary={task.title}
           sx={{
+            flexGrow: 1,
+            minWidth: 0,
+            m: 0,
+            alignSelf: 'center',
+            '& .MuiListItemText-primary': {
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            },
             textDecoration: !recurring && task.completed ? 'line-through' : 'none',
             opacity: !recurring && task.completed ? 0.6 : 1,
           }}
         />
+
+        {/* Right-side actions — fixed width, never shrinks */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0, ml: 0.5, mt: '2px' }}>
+          {renderSignificanceControls(task.id, sig)}
+          {recurring && (
+            <Tooltip title={justLogged ? t('logged') : t('logHistory')}>
+              <IconButton
+                size="small"
+                aria-label="log recurring task"
+                onClick={handleLog}
+                color={justLogged ? 'success' : 'primary'}
+                sx={{ transition: 'color 0.3s' }}
+              >
+                {justLogged ? <TaskAltIcon fontSize="small" /> : <CheckCircleOutlineIcon fontSize="small" />}
+              </IconButton>
+            </Tooltip>
+          )}
+          {subtasks.length > 0 && (
+            <Chip
+              label={`${completedSubtasks}/${subtasks.length}`}
+              size="small"
+              variant="outlined"
+              sx={{ height: 18, fontSize: '0.65rem', '& .MuiChip-label': { px: 0.75 } }}
+            />
+          )}
+          <IconButton edge="end" size="small" onClick={(e) => setMenuAnchor(e.currentTarget)}>
+            <MoreVertIcon fontSize="small" />
+          </IconButton>
+          <Menu
+            anchorEl={menuAnchor}
+            open={Boolean(menuAnchor)}
+            onClose={() => setMenuAnchor(null)}
+            slotProps={{ paper: { sx: { minWidth: 200 } } }}
+          >
+            <MenuItem onClick={() => { setShowAdd((v) => !v); setMenuAnchor(null); }}>
+              <ListItemIcon>
+                <AddIcon fontSize="small" color={showAdd ? 'primary' : 'inherit'} />
+              </ListItemIcon>
+              {showAdd ? t('cancelSubtask') : t('addSubtask')}
+            </MenuItem>
+            <MenuItem onClick={() => { onRecurringToggle?.(task.id); setMenuAnchor(null); }}>
+              <ListItemIcon>
+                {recurring ? <RepeatOneIcon fontSize="small" color="primary" /> : <RepeatIcon fontSize="small" />}
+              </ListItemIcon>
+              {recurring ? t('makeOneTime') : t('makeRecurring')}
+            </MenuItem>
+            <Divider />
+            <MenuItem onClick={() => { onDelete(); setMenuAnchor(null); }} sx={{ color: 'error.main' }}>
+              <ListItemIcon>
+                <DeleteIcon fontSize="small" color="error" />
+              </ListItemIcon>
+              {t('delete')}
+            </MenuItem>
+          </Menu>
+        </Box>
       </ListItem>
 
       {/* Inline add-subtask input */}
