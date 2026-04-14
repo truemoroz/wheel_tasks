@@ -5,7 +5,6 @@ import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import Typography from '@mui/material/Typography';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Chip from '@mui/material/Chip';
 import Popover from '@mui/material/Popover';
 import List from '@mui/material/List';
@@ -26,11 +25,6 @@ import Divider from '@mui/material/Divider';
 import { LifeSphereGroup } from '@/app/types/todo';
 import TaskItem from '@/app/components/TaskItem';
 
-function getRatingColor(rating: number): 'error' | 'warning' | 'success' | 'default' {
-  if (rating <= 3) return 'error';
-  if (rating <= 6) return 'warning';
-  return 'success';
-}
 
 interface SphereGroupProps {
   group: LifeSphereGroup;
@@ -57,6 +51,12 @@ interface SphereGroupProps {
   onExpandedChange?: (expanded: boolean) => void;
 }
 
+function getRatingColor(rating: number): 'error' | 'warning' | 'success' | 'default' {
+  if (rating <= 3) return 'error';
+  if (rating <= 6) return 'warning';
+  return 'success';
+}
+
 export default function SphereGroup({
   group,
   onRatingChange,
@@ -69,7 +69,7 @@ export default function SphereGroup({
   onTaskLog,
   onGoalAdd,
   onGoalDelete,
-  onGoalEstimationChange,
+  onGoalEstimationChange: _onGoalEstimationChange,
   onSubtaskAdd,
   onSubtaskToggle,
   onSubtaskDelete,
@@ -83,8 +83,8 @@ export default function SphereGroup({
   const [newGoal, setNewGoal] = useState('');
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(group.name);
-  const [ratingAnchor, setRatingAnchor] = useState<null | HTMLElement>(null);
   const [titleHovered, setTitleHovered] = useState(false);
+  const [ratingAnchor, setRatingAnchor] = useState<null | HTMLElement>(null);
   const ratingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const openRating = (e: React.MouseEvent<HTMLElement>) => {
@@ -145,11 +145,12 @@ export default function SphereGroup({
       {...(expanded !== undefined ? { expanded } : {})}
       {...(onExpandedChange ? { onChange: (_: React.SyntheticEvent, isExpanded: boolean) => onExpandedChange(isExpanded) } : {})}
     >
-      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, width: '100%', mr: 2, overflow: 'hidden' }}>
+      <AccordionSummary>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, width: '100%', minWidth: 0, overflow: 'hidden' }}>
+          {/* title / edit area — unchanged */}
           {editingName ? (
             <Box
-              sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}
+              sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1, minWidth: 0 }}
               onClick={(e) => e.stopPropagation()}
             >
               <TextField
@@ -196,11 +197,11 @@ export default function SphereGroup({
             </Box>
           ) : (
             <Box
-              sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}
+              sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1, minWidth: 0, overflow: 'hidden' }}
               onMouseEnter={() => setTitleHovered(true)}
               onMouseLeave={() => setTitleHovered(false)}
             >
-              <Typography variant="h6" sx={{ flexGrow: 1, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+              <Typography variant="h6" sx={{ flexGrow: 1, minWidth: 0, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
                 {group.name}
               </Typography>
               <Box
@@ -225,7 +226,13 @@ export default function SphereGroup({
               </Box>
             </Box>
           )}
-          <Box sx={{ display: 'flex', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
+
+          <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' }, whiteSpace: 'nowrap' }}>
+            {t('tasksCount', { completed: completedCount, total: group.tasks.length })}
+          </Typography>
+
+          {/* Rating chip — replaces the expand chevron */}
+          <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
             <Chip
               label={group.rating}
               color={getRatingColor(group.rating)}
@@ -256,17 +263,8 @@ export default function SphereGroup({
                 tabIndex={group.rating <= 1 ? -1 : 0}
                 aria-label={t('decreaseRating')}
                 aria-disabled={group.rating <= 1}
-                onClick={() => {
-                  if (group.rating <= 1) return;
-                  const next = group.rating - 1;
-                  onRatingChange(group.id, next);
-                }}
-                onKeyDown={(e) => {
-                  if ((e.key === 'Enter' || e.key === ' ') && group.rating > 1) {
-                    const next = group.rating - 1;
-                    onRatingChange(group.id, next);
-                  }
-                }}
+                onClick={() => { if (group.rating > 1) onRatingChange(group.id, group.rating - 1); }}
+                onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && group.rating > 1) onRatingChange(group.id, group.rating - 1); }}
                 sx={{
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                   borderRadius: '50%', padding: '4px', color: 'action.active',
@@ -277,28 +275,15 @@ export default function SphereGroup({
               >
                 <RemoveIcon fontSize="small" />
               </Box>
-              <Chip
-                label={group.rating}
-                color={getRatingColor(group.rating)}
-                size="small"
-              />
+              <Chip label={group.rating} color={getRatingColor(group.rating)} size="small" />
               <Box
                 component="span"
                 role="button"
                 tabIndex={group.rating >= 10 ? -1 : 0}
                 aria-label={t('increaseRating')}
                 aria-disabled={group.rating >= 10}
-                onClick={() => {
-                  if (group.rating >= 10) return;
-                  const next = group.rating + 1;
-                  onRatingChange(group.id, next);
-                }}
-                onKeyDown={(e) => {
-                  if ((e.key === 'Enter' || e.key === ' ') && group.rating < 10) {
-                    const next = group.rating + 1;
-                    onRatingChange(group.id, next);
-                  }
-                }}
+                onClick={() => { if (group.rating < 10) onRatingChange(group.id, group.rating + 1); }}
+                onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && group.rating < 10) onRatingChange(group.id, group.rating + 1); }}
                 sx={{
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                   borderRadius: '50%', padding: '4px', color: 'action.active',
@@ -311,9 +296,6 @@ export default function SphereGroup({
               </Box>
             </Popover>
           </Box>
-          <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' }, whiteSpace: 'nowrap' }}>
-            {t('tasksCount', { completed: completedCount, total: group.tasks.length })}
-          </Typography>
         </Box>
       </AccordionSummary>
       <AccordionDetails>

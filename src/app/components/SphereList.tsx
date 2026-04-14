@@ -394,7 +394,7 @@ export default function SphereList() {
   });
 
   return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '340px minmax(0, 800px)' }, gap: 2, alignItems: 'start', maxWidth: 1200, mx: 'auto', width: '100%' }}>
+    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '340px minmax(0, 800px)' }, gap: 2, alignItems: 'start', maxWidth: 1200, mx: 'auto', width: '100%', minWidth: 0, overflow: 'hidden' }}>
       {/* Left panel: wheel (collapsible, no title) + sphere selector cards */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
