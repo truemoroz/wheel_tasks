@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSpheresRefetch } from '@/app/components/SpheresRefetchContext';
 import Box from '@mui/material/Box';
@@ -70,14 +70,18 @@ export default function SphereList() {
   const [error, setError] = useState<string | null>(null);
   const [wheelCollapsed, setWheelCollapsed] = useState(false);
   const [selectedSphereId, setSelectedSphereId] = useState<string | null>(null);
+  const hasLoadedOnce = useRef(false);
 
   useEffect(() => {
-    setLoading(true);
+    if (!hasLoadedOnce.current) {
+      setLoading(true);
+    }
     fetch('/api/spheres')
       .then((res) => res.json())
       .then(async (data) => {
         setSpheres(data);
         setLoading(false);
+        hasLoadedOnce.current = true;
 
         // Apply sphere customisations from the landing page (Google OAuth sign-up flow)
         try {
