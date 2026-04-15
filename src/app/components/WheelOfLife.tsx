@@ -5,7 +5,7 @@ import { useTheme } from '@mui/material/styles';
 import { LifeSphereGroup } from '@/app/types/todo';
 
 /** Maps rating 1–10 to a colour along red → yellow → green → blue → purple. */
-function ratingToColor(rating: number): string {
+export function ratingToColor(rating: number): string {
   // Stops: 1=red, 4=yellow, 6=green, 8=blue, 10=purple
   const stops: [number, [number, number, number]][] = [
     [1,  [220,  38,  38]],  // red-600
@@ -39,8 +39,9 @@ interface WheelOfLifeProps {
 }
 
 const SIZE = 400;
+const PAD = 50; // extra viewBox padding so labels never overflow the SVG layout box
 const CENTER = SIZE / 2;
-const MAX_RADIUS = CENTER - 56; // leave room for labels
+const MAX_RADIUS = CENTER - 50; // leave room for labels (50 px clearance matches PAD)
 const LEVELS = 10;
 
 /** Split a sphere name into at most 2 balanced lines. */
@@ -122,8 +123,17 @@ export default function WheelOfLife({ spheres }: WheelOfLifeProps) {
 
   return (
     <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-      <Box sx={{ textAlign: 'center', width: '100%', maxWidth: SIZE }}>
-        <svg width="100%" viewBox={`0 0 ${SIZE} ${SIZE}`} style={{ display: 'block', overflow: 'visible' }}>
+      {/* maxWidth caps the chart; padding-top:100% is the only cross-browser reliable
+          technique for preserving a 1:1 SVG aspect ratio inside overflow:auto containers */}
+      <Box sx={{ width: '100%', maxWidth: SIZE }}>
+        <Box sx={{ position: 'relative', paddingTop: '100%' }}>
+          <Box sx={{ position: 'absolute', inset: 0 }}>
+            <svg
+              width="100%"
+              height="100%"
+              viewBox={`${-PAD} ${-PAD} ${SIZE + 2 * PAD} ${SIZE + 2 * PAD}`}
+              style={{ display: 'block', overflow: 'hidden' }}
+            >
           {/* Background circle */}
           <circle
             cx={CENTER} cy={CENTER} r={MAX_RADIUS}
@@ -152,7 +162,7 @@ export default function WheelOfLife({ spheres }: WheelOfLifeProps) {
                 ? 'start'
                 : 'end';
             const lines = splitLabel(name);
-            const lineHeight = 11;
+            const lineHeight = 16;
             const totalHeight = lines.length * lineHeight;
             const startY = y - totalHeight / 2 + 2;
             return (
@@ -163,7 +173,7 @@ export default function WheelOfLife({ spheres }: WheelOfLifeProps) {
                     x={x}
                     y={startY + li * lineHeight}
                     textAnchor={anchor}
-                    fontSize={9}
+                    fontSize={14}
                     fontWeight={600}
                     fill={textColor}
                     fontFamily={theme.typography.fontFamily}
@@ -175,7 +185,7 @@ export default function WheelOfLife({ spheres }: WheelOfLifeProps) {
                   x={x}
                   y={startY + lines.length * lineHeight + 2}
                   textAnchor={anchor}
-                  fontSize={9}
+                  fontSize={16}
                   fill={color}
                   fontFamily={theme.typography.fontFamily}
                   fontWeight={700}
@@ -186,6 +196,8 @@ export default function WheelOfLife({ spheres }: WheelOfLifeProps) {
             );
           })}
         </svg>
+          </Box>
+        </Box>
       </Box>
     </Box>
   );

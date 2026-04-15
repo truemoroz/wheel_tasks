@@ -26,8 +26,12 @@ export default async function LocaleLayout({
       <ThemeRegistry>
         <AuthProvider>
           <SpheresRefetchProvider>
-            <AppBarComponent />
-            {children}
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+              <AppBarComponent />
+              <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
+                {children}
+              </div>
+            </div>
             <AgentChat />
             <FeedbackChat />
           </SpheresRefetchProvider>

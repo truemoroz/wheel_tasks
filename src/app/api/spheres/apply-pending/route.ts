@@ -14,6 +14,7 @@ export async function PATCH(request: Request) {
     await connectToDatabase();
     const { spheres }: { spheres: PendingSphere[] } = await request.json();
     if (!Array.isArray(spheres)) return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+    if (spheres.length === 0) return NextResponse.json({ error: 'No spheres to apply' }, { status: 400 });
 
     const userId = session.user.id;
 

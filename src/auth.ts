@@ -33,10 +33,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async signIn({ user, account }) {
       if (account?.provider === 'google') {
         await connectToDatabase();
-        const existing = await User.findOne({ email: user.email });
-        if (!existing) {
-          await User.create({ email: user.email! });
+        let dbUser = await User.findOne({ email: user.email });
+        if (!dbUser) {
+          dbUser = await User.create({ email: user.email! });
         }
+        // Override the Google OAuth subject ID with the MongoDB _id so that
+        // session.user.id is consistent with every other route that uses it.
+        user.id = dbUser._id.toString();
       }
       return true;
     },

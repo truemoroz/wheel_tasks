@@ -12,6 +12,7 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import EditIcon from '@mui/icons-material/Edit';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
+import { ratingToColor } from '@/app/components/WheelOfLife';
 
 interface SphereEntry {
   id: string;
@@ -19,15 +20,6 @@ interface SphereEntry {
   title: string;
   desc: string;
   rating: number;
-}
-
-const defaultSpheres: SphereEntry[] = [];   // replaced by locale-aware list inside component
-
-
-function getRatingColor(r: number): 'error' | 'warning' | 'success' {
-  if (r <= 3) return 'error';
-  if (r <= 6) return 'warning';
-  return 'success';
 }
 
 export default function SpheresRater() {
@@ -82,7 +74,7 @@ export default function SpheresRater() {
     <Box>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         {spheres.map((sphere) => {
-          const color = getRatingColor(sphere.rating);
+          const color = ratingToColor(sphere.rating);
           const isEditing = editingId === sphere.id;
           const isHovered = hoveredId === sphere.id;
 
@@ -98,6 +90,7 @@ export default function SpheresRater() {
                 borderRadius: 2,
                 border: '1px solid',
                 borderColor: 'divider',
+                borderLeft: `4px solid ${color}`,
                 bgcolor: 'background.paper',
               }}
             >
@@ -162,23 +155,27 @@ export default function SpheresRater() {
                 <IconButton
                   size="small"
                   disabled={sphere.rating <= 1}
-                  color={color}
                   onClick={() => changeRating(sphere.id, -1)}
+                  sx={{ color }}
                 >
                   <RemoveIcon sx={{ fontSize: 18 }} />
                 </IconButton>
                 <Chip
                   label={`${sphere.rating}/10`}
-                  color={color}
                   size="small"
                   variant="outlined"
-                  sx={{ minWidth: 52, fontWeight: 'bold' }}
+                  sx={{
+                    minWidth: 52,
+                    fontWeight: 'bold',
+                    borderColor: color,
+                    color,
+                  }}
                 />
                 <IconButton
                   size="small"
                   disabled={sphere.rating >= 10}
-                  color={color}
                   onClick={() => changeRating(sphere.id, 1)}
+                  sx={{ color }}
                 >
                   <AddIcon sx={{ fontSize: 18 }} />
                 </IconButton>
