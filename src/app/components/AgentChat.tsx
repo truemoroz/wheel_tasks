@@ -91,7 +91,7 @@ export default function AgentChat() {
           <Box
             sx={{
               display: 'flex', alignItems: 'center', gap: 1,
-              px: 2, py: 1.5, bgcolor: 'secondary.main', color: 'secondary.contrastText',
+              px: 2, py: 1.5, bgcolor: 'text.primary', color: 'background.paper',
             }}
           >
             <SmartToyIcon fontSize="small" />
@@ -221,7 +221,7 @@ export default function AgentChat() {
           aria-label={open ? 'close AI agent' : 'open AI agent'}
           sx={{
             width: 56, height: 56, borderRadius: '50%', border: 'none',
-            bgcolor: 'secondary.main', color: 'secondary.contrastText',
+            bgcolor: 'text.primary', color: 'background.paper',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer', boxShadow: 4,
             transition: 'transform 0.2s, box-shadow 0.2s',
