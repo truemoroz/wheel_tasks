@@ -108,7 +108,7 @@ export default function AppBarComponent() {
                             {session.user.name ?? session.user.email}
                         </Typography>
                         <Tooltip title={t('signOut')}>
-                            <IconButton color="inherit" onClick={() => signOut({ callbackUrl: '/login' })} aria-label="sign out">
+                            <IconButton color="inherit" onClick={() => signOut({ callbackUrl: '/' })} aria-label="sign out">
                                 <LogoutIcon />
                             </IconButton>
                         </Tooltip>
