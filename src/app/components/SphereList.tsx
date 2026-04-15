@@ -8,7 +8,6 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
-import Collapse from '@mui/material/Collapse';
 import Fade from '@mui/material/Fade';
 import Paper from '@mui/material/Paper';
 import Chip from '@mui/material/Chip';
@@ -22,7 +21,7 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { LifeSphereGroup } from '@/app/types/todo';
 import SphereGroup from '@/app/components/SphereGroup';
-import WheelOfLife from "@/app/components/WheelOfLife";
+import WheelOfLife, { ratingToColor } from "@/app/components/WheelOfLife";
 
 function updateSphere(spheres: LifeSphereGroup[], updated: LifeSphereGroup): LifeSphereGroup[] {
   return spheres.map((s) => (s.id === updated.id ? updated : s));
@@ -77,7 +76,14 @@ export default function SphereList() {
   const [wheelCollapsed, setWheelCollapsed] = useState(false);
   const [selectedSphereId, setSelectedSphereId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerExpanded, setDrawerExpanded] = useState(false);
+  const touchStartYRef = useRef(0);
   const hasLoadedOnce = useRef(false);
+
+  // Reset expanded state whenever the drawer closes
+  useEffect(() => {
+    if (!drawerOpen) setDrawerExpanded(false);
+  }, [drawerOpen]);
 
   useEffect(() => {
     if (!hasLoadedOnce.current) {
@@ -90,10 +96,12 @@ export default function SphereList() {
         setLoading(false);
         hasLoadedOnce.current = true;
 
-        // Apply sphere customisations from the landing page (Google OAuth sign-up flow)
+        // Apply sphere customisations from the landing page (Google OAuth sign-up flow).
+        // Only run when the user has no spheres yet — i.e. right after account creation,
+        // not on every subsequent login.
         try {
           const raw = localStorage.getItem('pendingSphereRatings');
-          if (raw) {
+          if (raw && data.length === 0) {
             localStorage.removeItem('pendingSphereRatings');
             const spheres = JSON.parse(raw);
             const res = await fetch('/api/spheres/apply-pending', {
@@ -105,6 +113,9 @@ export default function SphereList() {
               const updated = await res.json();
               setSpheres(updated);
             }
+          } else if (raw && data.length > 0) {
+            // User already has spheres — discard the stale pending ratings
+            localStorage.removeItem('pendingSphereRatings');
           }
         } catch { /* ignore */ }
       })
@@ -401,9 +412,19 @@ export default function SphereList() {
   });
 
   return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '340px minmax(0, 800px)' }, gap: 2, alignItems: 'start', maxWidth: 1200, mx: 'auto', width: '100%', minWidth: 0, overflow: 'hidden' }}>
+    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '340px minmax(0, 800px)' }, gap: 2, alignItems: 'stretch', maxWidth: 1200, mx: 'auto', width: '100%', minWidth: 0, height: '100%', overflow: 'hidden' }}>
       {/* Left panel: wheel (collapsible) + sphere selector cards */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+      <Box
+        component="div"
+        sx={{
+          overflowY: 'auto',
+          pr: { md: 1.5 },
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 1,
+          pb: 2,
+        }}
+      >
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
           <Tooltip title={wheelCollapsed ? t('expandDiagram') : t('collapseDiagram')}>
             <IconButton size="small" onClick={() => setWheelCollapsed((v) => !v)}>
@@ -416,14 +437,19 @@ export default function SphereList() {
             </IconButton>
           </Tooltip>
         </Box>
-        <Collapse in={!wheelCollapsed}>
-          <Box sx={{ mb: 0.5 }}>
-            <WheelOfLife spheres={sortedSpheres} />
-          </Box>
-        </Collapse>
+        <Box
+          sx={{
+            overflow: 'hidden',
+            flexShrink: 0,
+            maxHeight: wheelCollapsed ? 0 : 600,
+            transition: 'max-height 0.3s ease-in-out',
+            mb: wheelCollapsed ? 0 : 0.5,
+          }}
+        >
+          <WheelOfLife spheres={sortedSpheres} />
+        </Box>
         {sortedSpheres.map((group) => {
           const isSelected = group.id === (selectedSphere?.id ?? null);
-          const color = group.rating <= 3 ? 'error' : group.rating <= 6 ? 'warning' : 'success';
           return (
             <Paper
               key={group.id}
@@ -441,7 +467,16 @@ export default function SphereList() {
                 <Typography sx={{ flexGrow: 1, fontWeight: isSelected ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {group.name}
                 </Typography>
-                <Chip label={group.rating} color={color} size="small" />
+                <Chip
+                  label={group.rating}
+                  size="small"
+                  sx={{
+                    bgcolor: ratingToColor(group.rating),
+                    color: '#fff',
+                    fontWeight: 700,
+                    '& .MuiChip-label': { px: 1 },
+                  }}
+                />
               </Box>
             </Paper>
           );
@@ -449,7 +484,7 @@ export default function SphereList() {
       </Box>
 
       {/* Right panel: desktop only */}
-      <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+      <Box sx={{ display: { xs: 'none', md: 'block' }, overflowY: 'auto', pr: 1.5, pb: 2 }}>
         {selectedSphere && (
           <Fade key={selectedSphere.id} in timeout={250}>
             <div>
@@ -464,21 +499,36 @@ export default function SphereList() {
         anchor="bottom"
         open={isMobile && drawerOpen}
         onOpen={() => setDrawerOpen(true)}
-        onClose={() => setDrawerOpen(false)}
+        onClose={() => { setDrawerExpanded(false); setDrawerOpen(false); }}
         disableSwipeToOpen
         ModalProps={{ keepMounted: true }}
         PaperProps={{
           sx: {
-            borderTopLeftRadius: 16,
-            borderTopRightRadius: 16,
-            maxHeight: '85vh',
+            borderTopLeftRadius: drawerExpanded ? 0 : 16,
+            borderTopRightRadius: drawerExpanded ? 0 : 16,
+            maxHeight: drawerExpanded ? '100dvh' : '85dvh',
+            height: drawerExpanded ? '100dvh' : undefined,
             display: 'flex',
             flexDirection: 'column',
+            transition: 'max-height 0.3s ease, height 0.3s ease, border-radius 0.2s ease',
           },
         }}
       >
-        {/* Pull handle */}
-        <Box sx={{ display: 'flex', justifyContent: 'center', pt: 1, pb: 0.5, flexShrink: 0 }}>
+        {/* Pull handle — swipe up to expand, swipe down to collapse */}
+        <Box
+          onTouchStart={(e) => { touchStartYRef.current = e.touches[0].clientY; }}
+          onTouchEnd={(e) => {
+            const delta = e.changedTouches[0].clientY - touchStartYRef.current;
+            if (delta < -40 && !drawerExpanded) {
+              setDrawerExpanded(true);
+              e.stopPropagation();
+            } else if (delta > 40 && drawerExpanded) {
+              setDrawerExpanded(false);
+              e.stopPropagation();
+            }
+          }}
+          sx={{ display: 'flex', justifyContent: 'center', pt: 1, pb: 0.5, flexShrink: 0, cursor: 'grab', touchAction: 'none' }}
+        >
           <Box sx={{ width: 40, height: 4, borderRadius: 2, bgcolor: 'divider' }} />
         </Box>
         {/* Drawer header */}
