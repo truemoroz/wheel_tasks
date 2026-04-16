@@ -28,7 +28,7 @@ type LinkStatus = 'idle' | 'loading' | 'linked' | 'not-linked' | 'generating' | 
 
 const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ?? '';
 
-export default function FeedbackChat() {
+export default function TelegramTools() {
   const t = useTranslations('Feedback');
   const { data: session, status: authStatus } = useSession();
   const [open, setOpen] = useState(false);
@@ -69,6 +69,7 @@ export default function FeedbackChat() {
       if (data.deepLink) {
         setDeepLink(data.deepLink);
         setLinkStatus('generated');
+        window.open(data.deepLink, '_blank', 'noopener,noreferrer');
       } else {
         setLinkStatus('not-linked');
       }
@@ -379,14 +380,14 @@ export default function FeedbackChat() {
           aria-label={open ? 'close feedback' : 'open feedback'}
           sx={{
             width: 56, height: 56, borderRadius: '50%', border: 'none',
-            bgcolor: 'primary.main', color: 'primary.contrastText',
+            bgcolor: '#2AABEE', color: '#fff',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer', boxShadow: 4,
             transition: 'transform 0.2s, box-shadow 0.2s',
             '&:hover': { transform: 'scale(1.08)', boxShadow: 6 },
           }}
         >
-          {open ? <CloseIcon /> : <ChatIcon />}
+          {open ? <CloseIcon /> : <TelegramIcon />}
         </Box>
       </Tooltip>
     </Box>

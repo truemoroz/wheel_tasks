@@ -177,8 +177,8 @@
     "errorMessage": "Something went wrong. Please try again."
   },
   "Feedback": {
-    "buttonTooltip": "Send a proposal",
-    "title": "Send a Proposal",
+    "buttonTooltip": "Telegram bot & feedback",
+    "title": "Telegram tools",
     "subtitle": "Have an idea or suggestion? Drop me a message below.",
     "telegramPrompt": "The fastest way to reach me — chat directly in Telegram:",
     "openInTelegram": "Open chat in Telegram",
