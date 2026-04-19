@@ -23,7 +23,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
     if (goals !== undefined) update.goals = goals;
 
     const sphere = await Sphere.findOneAndUpdate(
-      { id, userId: session.user.id },
+      { _id: id, userId: session.user.id },
       { $set: update },
       { returnDocument: 'after' },
     ).lean();
@@ -44,7 +44,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
 
     await connectToDatabase();
     const { id } = await params;
-    await Sphere.deleteOne({ id, userId: session.user.id });
+    await Sphere.deleteOne({ _id: id, userId: session.user.id });
     // Also delete all tasks belonging to this sphere
     await Task.deleteMany({ sphereId: id, userId: session.user.id });
     return NextResponse.json({ success: true });

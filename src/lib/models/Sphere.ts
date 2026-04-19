@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Model, models } from 'mongoose';
+import mongoose, { Schema, Document, Model, models, Types } from 'mongoose';
 
 export interface IGoal {
   id: string;
@@ -7,7 +7,7 @@ export interface IGoal {
 }
 
 export interface ISphere extends Document {
-  id: string;
+  _id: Types.ObjectId;
   userId: string;
   name: string;
   rating: number;
@@ -25,7 +25,6 @@ const GoalSchema = new Schema<IGoal>(
 
 const SphereSchema = new Schema<ISphere>(
   {
-    id: { type: String, required: true },
     userId: { type: String, required: true },
     name: { type: String, required: true },
     rating: { type: Number, default: 5 },
@@ -34,7 +33,7 @@ const SphereSchema = new Schema<ISphere>(
   { timestamps: true },
 );
 
-SphereSchema.index({ id: 1, userId: 1 }, { unique: true });
+SphereSchema.index({ userId: 1 });
 
 const Sphere: Model<ISphere> = (models.Sphere as Model<ISphere>) || mongoose.model<ISphere>('Sphere', SphereSchema);
 

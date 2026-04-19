@@ -5,6 +5,7 @@
     "register": "Register",
     "releaseHistory": "Release History",
     "todo": "Todo",
+    "taskgraph": "Task Graph",
     "history": "History",
     "signOut": "Sign out"
   },
@@ -76,6 +77,10 @@
     "feature": "feature",
     "improvement": "improvement",
     "fix": "fix",
+    "v18Title": "Task Graph",
+    "v18Date": "April 19, 2026",
+    "v18Heading": "Visualise your tasks as an interactive graph",
+    "v18Body": "A new Task Graph page is now available for authenticated users. It renders all your tasks and their subtasks as an interactive node graph, letting you see dependencies and structure at a glance. The graph is lazy-loaded for performance and accessible from the Task Graph button in the top navigation bar.",
     "v17Title": "Telegram Bot — Access Your Data",
     "v17Date": "April 12, 2026",
     "v17Heading": "Get your spheres, goals and tasks right in Telegram",

@@ -18,7 +18,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     const { title } = await request.json();
     const goalId = `g-${Date.now()}`;
     const sphere = await Sphere.findOneAndUpdate(
-      { id, userId: session.user.id },
+      { _id: id, userId: session.user.id },
       { $push: { goals: { id: goalId, title } } },
       { returnDocument: 'after' },
     ).lean();
