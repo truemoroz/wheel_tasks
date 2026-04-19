@@ -20,14 +20,7 @@ export async function PATCH(request: Request) {
 
     await Promise.all(
       spheres.map((s) =>
-        Sphere.findOneAndUpdate(
-          { id: `${userId}-${s.id}`, userId },
-          {
-            $set: { name: s.name, rating: s.rating },
-            $setOnInsert: { id: `${userId}-${s.id}`, userId, goals: [] },
-          },
-          { upsert: true, new: true },
-        ),
+        Sphere.create({ userId, name: s.name, rating: s.rating, goals: [] }),
       ),
     );
 
@@ -38,4 +31,3 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: 'Failed to apply pending spheres' }, { status: 500 });
   }
 }
-

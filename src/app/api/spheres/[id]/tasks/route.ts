@@ -19,7 +19,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     const { title } = await request.json();
 
     // Verify sphere belongs to user
-    const sphere = await Sphere.findOne({ id, userId: session.user.id }).lean();
+    const sphere = await Sphere.findOne({ _id: id, userId: session.user.id }).lean();
     if (!sphere) return NextResponse.json({ error: 'Sphere not found' }, { status: 404 });
 
     await Task.create({ sphereId: id, userId: session.user.id, parentId: null, title, completed: false });

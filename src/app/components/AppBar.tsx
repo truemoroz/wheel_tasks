@@ -60,16 +60,20 @@ export default function AppBarComponent() {
                         <ListItemIcon><HomeIcon fontSize="small" /></ListItemIcon>
                         {t('home')}
                     </MenuItem>
-                    <Divider />
-                    <MenuItem component={Link} href="/login" onClick={() => setMenuAnchor(null)}>
-                        <ListItemIcon><LoginIcon fontSize="small" /></ListItemIcon>
-                        {t('signIn')}
-                    </MenuItem>
-                    <MenuItem component={Link} href="/register" onClick={() => setMenuAnchor(null)}>
-                        <ListItemIcon><PersonAddIcon fontSize="small" /></ListItemIcon>
-                        {t('register')}
-                    </MenuItem>
-                    <Divider />
+                    {!session?.user && (
+                        <>
+                            <Divider />
+                            <MenuItem component={Link} href="/login" onClick={() => setMenuAnchor(null)}>
+                                <ListItemIcon><LoginIcon fontSize="small" /></ListItemIcon>
+                                {t('signIn')}
+                            </MenuItem>
+                            <MenuItem component={Link} href="/register" onClick={() => setMenuAnchor(null)}>
+                                <ListItemIcon><PersonAddIcon fontSize="small" /></ListItemIcon>
+                                {t('register')}
+                            </MenuItem>
+                            <Divider />
+                        </>
+                    )}
                     <MenuItem component={Link} href="/changelog" onClick={() => setMenuAnchor(null)}>
                         <ListItemIcon><HistoryEduIcon fontSize="small" /></ListItemIcon>
                         {t('releaseHistory')}
@@ -82,6 +86,7 @@ export default function AppBarComponent() {
                 {session?.user && (
                     <>
                         <Button color="inherit" component={Link} href="/todo">{t('todo')}</Button>
+                        <Button color="inherit" component={Link} href="/taskgraph">{t('taskgraph')}</Button>
                         <Button color="inherit" component={Link} href="/history">{t('history')}</Button>
                     </>
                 )}

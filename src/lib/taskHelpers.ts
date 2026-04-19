@@ -55,19 +55,20 @@ export function collectDescendantIds(
   return ids;
 }
 
-/** Fetch a single sphere by its custom `id` field, hydrated with the task tree. */
+/** Fetch a single sphere by its _id, hydrated with the task tree. */
 export async function getHydratedSphere(sphereId: string, userId: string) {
-  const sphere = await Sphere.findOne({ id: sphereId, userId }).lean();
+  const sphere = await Sphere.findOne({ _id: sphereId, userId }).lean();
   if (!sphere) return null;
-  const allTasks = await Task.find({ sphereId, userId }).lean();
-  return { ...sphere, tasks: buildTaskTree(allTasks as unknown as LeanTask[]) };
+  const idStr = sphere._id.toString();
+  const allTasks = await Task.find({ sphereId: idStr, userId }).lean();
+  return { ...sphere, id: idStr, tasks: buildTaskTree(allTasks as unknown as LeanTask[]) };
 }
 
 /** Fetch all spheres for a user, each hydrated with the task tree. */
 export async function getHydratedSpheres(userId: string) {
   const spheres = await Sphere.find({ userId }).lean();
   if (spheres.length === 0) return [];
-  const sphereIds = spheres.map((s) => s.id);
+  const sphereIds = spheres.map((s) => s._id.toString());
   const allTasks = await Task.find({ userId, sphereId: { $in: sphereIds } }).lean();
 
   const tasksBySphere: Record<string, LeanTask[]> = {};
@@ -77,9 +78,8 @@ export async function getHydratedSpheres(userId: string) {
     tasksBySphere[lean.sphereId].push(lean);
   }
 
-  return spheres.map((s) => ({
-    ...s,
-    tasks: buildTaskTree(tasksBySphere[s.id] ?? []),
-  }));
+  return spheres.map((s) => {
+    const idStr = s._id.toString();
+    return { ...s, id: idStr, tasks: buildTaskTree(tasksBySphere[idStr] ?? []) };
+  });
 }
-

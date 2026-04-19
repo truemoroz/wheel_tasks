@@ -17,6 +17,7 @@
     "@mui/icons-material": "^7.3.8",
     "@mui/material": "^7.3.8",
     "@mui/material-nextjs": "^7.3.8",
+    "@xyflow/react": "^12.10.2",
     "ai": "^6.0.158",
     "bcryptjs": "^3.0.3",
     "mongoose": "^9.2.3",

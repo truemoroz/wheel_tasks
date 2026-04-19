@@ -16,7 +16,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
     await connectToDatabase();
     const { id, goalId } = await params;
     const sphere = await Sphere.findOneAndUpdate(
-      { id, userId: session.user.id },
+      { _id: id, userId: session.user.id },
       { $pull: { goals: { id: goalId } } },
       { returnDocument: 'after' },
     ).lean();
@@ -42,7 +42,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     if (body.title !== undefined) updateFields['goals.$.title'] = body.title;
 
     const sphere = await Sphere.findOneAndUpdate(
-      { id, userId: session.user.id, 'goals.id': goalId },
+      { _id: id, userId: session.user.id, 'goals.id': goalId },
       { $set: updateFields },
       { returnDocument: 'after' },
     ).lean();

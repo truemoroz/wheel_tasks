@@ -67,7 +67,7 @@ ${spheresSummary}`;
           title: z.string().describe('Short, actionable task title'),
         }),
         execute: async ({ sphereId, title }) => {
-          const sphere = await Sphere.findOne({ id: sphereId, userId }).lean();
+          const sphere = await Sphere.findOne({ _id: sphereId, userId }).lean();
           if (!sphere) return { error: `Sphere "${sphereId}" not found` };
           await Task.create({ sphereId, userId, parentId: null, title, completed: false });
           const updated = await getHydratedSphere(sphereId, userId);
@@ -83,7 +83,7 @@ ${spheresSummary}`;
         execute: async ({ sphereId, title }) => {
           const goalId = `g-${Date.now()}`;
           const sphere = await Sphere.findOneAndUpdate(
-            { id: sphereId, userId },
+            { _id: sphereId, userId },
             { $push: { goals: { id: goalId, title } } },
             { returnDocument: 'after' },
           ).lean();
