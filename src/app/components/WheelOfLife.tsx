@@ -67,19 +67,64 @@ export default function WheelOfLife({ spheres }: WheelOfLifeProps) {
 
   const segments = useMemo(() => {
     return spheres.map((sphere, i) => {
-      const startAngle = i * sliceAngle;
-      const endAngle = (i + 1) * sliceAngle;
-      const r = (sphere.rating / LEVELS) * MAX_RADIUS;
-      const [x1, y1] = polarToCartesian(startAngle, r);
-      const [x2, y2] = polarToCartesian(endAngle, r);
-      const largeArc = sliceAngle > 180 ? 1 : 0;
+      const radius = (sphere.rating / LEVELS) * MAX_RADIUS;
+      const color = ratingToColor(sphere.rating);
+
+      // Gap: 1 px perpendicular on each side → 2 px straight slit from center to arc.
+      // offsetAngle = arcsin(1/radius) ≈ 1/radius rad, giving constant width at every radius.
+      const gapAngleDeg = radius > 1 ? (2 / radius) * (180 / Math.PI) : 0;
+
+      const startAngle = i * sliceAngle + gapAngleDeg;
+      const endAngle   = (i + 1) * sliceAngle - gapAngleDeg;
+      const spanAngle  = endAngle - startAngle;
+      const largeArc   = spanAngle > 180 ? 1 : 0;
+
+      if (radius < 2) {
+        // Too small to bother rounding
+        const [x1, y1] = polarToCartesian(startAngle, radius);
+        const [x2, y2] = polarToCartesian(endAngle, radius);
+        const d = `M ${CENTER} ${CENTER} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+        return { d, color, sphere };
+      }
+
+      // Corner radius — capped so it never consumes more than half the arc/radius
+      const arcLen = (spanAngle * Math.PI / 180) * radius;
+      const cr = Math.min(10, radius * 0.18, arcLen * 0.3);
+      const crAngleDeg = (cr / radius) * (180 / Math.PI);
+
+      // Outer arc endpoints (before rounding)
+      const [x1, y1] = polarToCartesian(startAngle, radius);
+      const [x2, y2] = polarToCartesian(endAngle, radius);
+
+      // Unit vectors from center toward each outer corner
+      const len1 = Math.hypot(x1 - CENTER, y1 - CENTER);
+      const [ux1, uy1] = [(x1 - CENTER) / len1, (y1 - CENTER) / len1];
+      const len2 = Math.hypot(x2 - CENTER, y2 - CENTER);
+      const [ux2, uy2] = [(x2 - CENTER) / len2, (y2 - CENTER) / len2];
+
+      // Near-center points (round the center tip via Q through CENTER)
+      const cs1x = CENTER + ux1 * cr,          cs1y = CENTER + uy1 * cr;
+      const cs2x = CENTER + ux2 * cr,          cs2y = CENTER + uy2 * cr;
+
+      // Points inward along each radius just before the outer corner
+      const ri1x = CENTER + ux1 * (radius - cr), ri1y = CENTER + uy1 * (radius - cr);
+      const ri2x = CENTER + ux2 * (radius - cr), ri2y = CENTER + uy2 * (radius - cr);
+
+      // Points slightly past each outer corner along the arc
+      const [as1x, as1y] = polarToCartesian(startAngle + crAngleDeg, radius);
+      const [as2x, as2y] = polarToCartesian(endAngle   - crAngleDeg, radius);
+
       const d = [
-        `M ${CENTER} ${CENTER}`,
-        `L ${x1} ${y1}`,
-        `A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`,
+        `M ${cs1x} ${cs1y}`,                                           // start near center (start side)
+        `L ${ri1x} ${ri1y}`,                                           // up the start radius
+        `Q ${x1} ${y1} ${as1x} ${as1y}`,                              // round outer-start corner
+        `A ${radius} ${radius} 0 ${largeArc} 1 ${as2x} ${as2y}`,      // main arc
+        `Q ${x2} ${y2} ${ri2x} ${ri2y}`,                              // round outer-end corner
+        `L ${cs2x} ${cs2y}`,                                           // down the end radius
+        `Q ${CENTER} ${CENTER} ${cs1x} ${cs1y}`,                       // round center tip
         'Z',
       ].join(' ');
-      const color = ratingToColor(sphere.rating);
+
       return { d, color, sphere };
     });
   }, [spheres, sliceAngle]);
