@@ -68,60 +68,78 @@ export default function WheelOfLife({ spheres }: WheelOfLifeProps) {
   const segments = useMemo(() => {
     return spheres.map((sphere, i) => {
       const radius = (sphere.rating / LEVELS) * MAX_RADIUS;
-      const color = ratingToColor(sphere.rating);
+      const color  = ratingToColor(sphere.rating);
+      const GAP_HALF = 2; // 2 px offset per side → 4 px total gap
 
-      // Gap: 1 px perpendicular on each side → 2 px straight slit from center to arc.
-      // offsetAngle = arcsin(1/radius) ≈ 1/radius rad, giving constant width at every radius.
-      const gapAngleDeg = radius > 1 ? (2 / radius) * (180 / Math.PI) : 0;
+      // Boundary spoke angles (our polar system: 0°=top, CW)
+      const sBound = i * sliceAngle;           // start (CCW) boundary
+      const eBound = (i + 1) * sliceAngle;     // end   (CW)  boundary
+      const sRad = (sBound - 90) * Math.PI / 180;
+      const eRad = (eBound - 90) * Math.PI / 180;
 
-      const startAngle = i * sliceAngle + gapAngleDeg;
-      const endAngle   = (i + 1) * sliceAngle - gapAngleDeg;
-      const spanAngle  = endAngle - startAngle;
-      const largeArc   = spanAngle > 180 ? 1 : 0;
+      // Spoke direction unit vectors
+      const dsx = Math.cos(sRad), dsy = Math.sin(sRad);
+      const dex = Math.cos(eRad), dey = Math.sin(eRad);
 
-      if (radius < 2) {
-        // Too small to bother rounding
-        const [x1, y1] = polarToCartesian(startAngle, radius);
-        const [x2, y2] = polarToCartesian(endAngle, radius);
-        const d = `M ${CENTER} ${CENTER} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
-        return { d, color, sphere };
-      }
+      // Perpendiculars pointing INTO the sector
+      //  • start spoke → 90° CW on screen (y-down): (-y, x)
+      //  • end   spoke → 90° CCW on screen:         ( y,-x)
+      const psx = -dsy, psy = dsx;   // start perp toward interior
+      const pex =  dey, pey = -dex;  // end   perp toward interior
 
-      // Corner radius — capped so it never consumes more than half the arc/radius
-      const arcLen = (spanAngle * Math.PI / 180) * radius;
-      const cr = Math.min(10, radius * 0.18, arcLen * 0.3);
-      const crAngleDeg = (cr / radius) * (180 / Math.PI);
+      // Inner vertex: where the two offset lines meet (along mid-angle)
+      const halfSpan = (sliceAngle / 2) * Math.PI / 180;
+      const dInner   = GAP_HALF / Math.sin(halfSpan);
+      const midAngle = sBound + sliceAngle / 2;
+      const midRad   = (midAngle - 90) * Math.PI / 180;
+      const ix = CENTER + dInner * Math.cos(midRad);
+      const iy = CENTER + dInner * Math.sin(midRad);
 
-      // Outer arc endpoints (before rounding)
-      const [x1, y1] = polarToCartesian(startAngle, radius);
-      const [x2, y2] = polarToCartesian(endAngle, radius);
+      // Skip if the segment radius can't clear the inner vertex
+      if (radius <= dInner + 1) return { d: '', color, sphere };
 
-      // Unit vectors from center toward each outer corner
-      const len1 = Math.hypot(x1 - CENTER, y1 - CENTER);
-      const [ux1, uy1] = [(x1 - CENTER) / len1, (y1 - CENTER) / len1];
-      const len2 = Math.hypot(x2 - CENTER, y2 - CENTER);
-      const [ux2, uy2] = [(x2 - CENTER) / len2, (y2 - CENTER) / len2];
+      // Outer vertices: offset spoke lines intersect the arc circle
+      const tOuter = Math.sqrt(Math.max(0, radius * radius - GAP_HALF * GAP_HALF));
+      const osx = CENTER + GAP_HALF * psx + tOuter * dsx;   // outer on start side
+      const osy = CENTER + GAP_HALF * psy + tOuter * dsy;
+      const oex = CENTER + GAP_HALF * pex + tOuter * dex;   // outer on end side
+      const oey = CENTER + GAP_HALF * pey + tOuter * dey;
 
-      // Near-center points (round the center tip via Q through CENTER)
-      const cs1x = CENTER + ux1 * cr,          cs1y = CENTER + uy1 * cr;
-      const cs2x = CENTER + ux2 * cr,          cs2y = CENTER + uy2 * cr;
+      // ── Corner rounding ─────────────────────────────────────────────────
+      const edgeLenS = Math.hypot(osx - ix, osy - iy);
+      const edgeLenE = Math.hypot(oex - ix, oey - iy);
+      const cr = Math.min(8, edgeLenS * 0.25, edgeLenE * 0.25, radius * 0.15);
 
-      // Points inward along each radius just before the outer corner
-      const ri1x = CENTER + ux1 * (radius - cr), ri1y = CENTER + uy1 * (radius - cr);
-      const ri2x = CENTER + ux2 * (radius - cr), ri2y = CENTER + uy2 * (radius - cr);
+      // Unit vectors along edges: inner → outer
+      const usx = (osx - ix) / edgeLenS, usy = (osy - iy) / edgeLenS;
+      const uex = (oex - ix) / edgeLenE, uey = (oey - iy) / edgeLenE;
 
-      // Points slightly past each outer corner along the arc
-      const [as1x, as1y] = polarToCartesian(startAngle + crAngleDeg, radius);
-      const [as2x, as2y] = polarToCartesian(endAngle   - crAngleDeg, radius);
+      // Points near inner vertex (cr away along each edge)
+      const isx = ix + usx * cr, isy = iy + usy * cr;
+      const iex = ix + uex * cr, iey = iy + uey * cr;
+
+      // Points near outer corners (cr away along edge toward inner)
+      const oisx = osx - usx * cr, oisy = osy - usy * cr;
+      const oiex = oex - uex * cr, oiey = oey - uey * cr;
+
+      // Points on the arc just past each outer corner (trim arc for rounding)
+      const osAngle = Math.atan2(osy - CENTER, osx - CENTER) * 180 / Math.PI + 90;
+      const oeAngle = Math.atan2(oey - CENTER, oex - CENTER) * 180 / Math.PI + 90;
+      const crDeg   = (cr / radius) * (180 / Math.PI);
+      const [a1x, a1y] = polarToCartesian(osAngle + crDeg, radius);
+      const [a2x, a2y] = polarToCartesian(oeAngle - crDeg, radius);
+
+      const arcSpan = ((oeAngle - osAngle) % 360 + 360) % 360;
+      const largeArc = arcSpan > 180 ? 1 : 0;
 
       const d = [
-        `M ${cs1x} ${cs1y}`,                                           // start near center (start side)
-        `L ${ri1x} ${ri1y}`,                                           // up the start radius
-        `Q ${x1} ${y1} ${as1x} ${as1y}`,                              // round outer-start corner
-        `A ${radius} ${radius} 0 ${largeArc} 1 ${as2x} ${as2y}`,      // main arc
-        `Q ${x2} ${y2} ${ri2x} ${ri2y}`,                              // round outer-end corner
-        `L ${cs2x} ${cs2y}`,                                           // down the end radius
-        `Q ${CENTER} ${CENTER} ${cs1x} ${cs1y}`,                       // round center tip
+        `M ${isx} ${isy}`,                                         // near inner, start side
+        `L ${oisx} ${oisy}`,                                       // up start edge
+        `Q ${osx} ${osy} ${a1x} ${a1y}`,                          // round outer-start corner
+        `A ${radius} ${radius} 0 ${largeArc} 1 ${a2x} ${a2y}`,   // outer arc (CW = sweep 1)
+        `Q ${oex} ${oey} ${oiex} ${oiey}`,                        // round outer-end corner
+        `L ${iex} ${iey}`,                                         // down end edge
+        `Q ${ix} ${iy} ${isx} ${isy}`,                            // round inner vertex
         'Z',
       ].join(' ');
 
