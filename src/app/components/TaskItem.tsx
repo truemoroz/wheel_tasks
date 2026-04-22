@@ -22,7 +22,7 @@ import RepeatIcon from '@mui/icons-material/Repeat';
 import RepeatOneIcon from '@mui/icons-material/RepeatOne';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
-import SubdirectoryArrowRightIcon from '@mui/icons-material/SubdirectoryArrowRight';
+import ShortcutIcon from '@mui/icons-material/Shortcut';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { Task } from '@/app/types/todo';
 
@@ -174,15 +174,17 @@ export default function TaskItem({
             px: 1,
             py: 0.5,
           } : {
-            px: 0.5,
+            // ml: -2 * depth,
+            pl: (depth -1) + depth * 2,
+            // px: 0.5,
             py: 0.25,
           }),
         }}
       >
         {/* Leading icon / checkbox */}
-        <ListItemIcon sx={{ minWidth: 32, flexShrink: 0, alignSelf: 'center' }}>
+        <ListItemIcon sx={{ minWidth: 32, flexShrink: 0, alignItems: 'center' }}>
           {depth > 0 && (
-            <SubdirectoryArrowRightIcon sx={{ fontSize: 14, color: 'text.secondary', mr: 0.5 }} />
+            <ShortcutIcon sx={{ fontSize: 14, color: 'text.secondary', mr: 0.5, transform: 'scaleY(-1)' }} />
           )}
           {recurring ? (
             <Tooltip title={t('recurringTask')}>
@@ -292,8 +294,9 @@ export default function TaskItem({
         <Box
           key={subtask.id}
           sx={{
-            ml: 2,
-            width: 'calc(100% - 16px)',
+            // ml: 0.5,
+            // pl: (depth +1) * 1.5,
+            // width: "calc(100% - 16px)",
           }}
         >
           <TaskItem
