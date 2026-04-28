@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -22,7 +22,7 @@ import RepeatIcon from '@mui/icons-material/Repeat';
 import RepeatOneIcon from '@mui/icons-material/RepeatOne';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
-import SubdirectoryArrowRightIcon from '@mui/icons-material/SubdirectoryArrowRight';
+import ShortcutIcon from '@mui/icons-material/Shortcut';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { Task } from '@/app/types/todo';
 
@@ -66,6 +66,14 @@ export default function TaskItem({
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [sigAnchor, setSigAnchor] = useState<null | HTMLElement>(null);
   const sigTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const subtaskInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (showAdd) {
+      const timer = setTimeout(() => subtaskInputRef.current?.focus(), 150);
+      return () => clearTimeout(timer);
+    }
+  }, [showAdd]);
 
   const openSig = (e: React.MouseEvent<HTMLElement>) => {
     if (sigTimer.current) clearTimeout(sigTimer.current);
@@ -155,7 +163,7 @@ export default function TaskItem({
         disableGutters
         sx={{
           display: 'flex',
-          alignItems: 'flex-start',
+          alignItems: 'center',
           gap: 0,
           ...(depth === 0 ? {
             borderLeft: '3px solid',
@@ -166,15 +174,17 @@ export default function TaskItem({
             px: 1,
             py: 0.5,
           } : {
-            px: 0.5,
+            // ml: -2 * depth,
+            pl: (depth -1) + depth * 2,
+            // px: 0.5,
             py: 0.25,
           }),
         }}
       >
         {/* Leading icon / checkbox */}
-        <ListItemIcon sx={{ minWidth: 32, flexShrink: 0, mt: '2px' }}>
+        <ListItemIcon sx={{ minWidth: 32, flexShrink: 0, alignItems: 'center' }}>
           {depth > 0 && (
-            <SubdirectoryArrowRightIcon sx={{ fontSize: 14, color: 'text.secondary', mr: 0.5 }} />
+            <ShortcutIcon sx={{ fontSize: 14, color: 'text.secondary', mr: 0.5, transform: 'scaleY(-1)' }} />
           )}
           {recurring ? (
             <Tooltip title={t('recurringTask')}>
@@ -203,8 +213,8 @@ export default function TaskItem({
         />
 
         {/* Right-side actions — fixed width, never shrinks */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0, ml: 0.5, mt: '2px' }}>
-          {renderSignificanceControls(task.id, sig)}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0, ml: 0.5 }}>
+          <Box sx={{ mr: '20px', display: 'flex', alignItems: 'center' }}>{renderSignificanceControls(task.id, sig)}</Box>
           {recurring && (
             <Tooltip title={justLogged ? t('logged') : t('logHistory')}>
               <IconButton
@@ -218,14 +228,14 @@ export default function TaskItem({
               </IconButton>
             </Tooltip>
           )}
-          {subtasks.length > 0 && (
-            <Chip
-              label={`${completedSubtasks}/${subtasks.length}`}
-              size="small"
-              variant="outlined"
-              sx={{ height: 18, fontSize: '0.65rem', '& .MuiChip-label': { px: 0.75 } }}
-            />
-          )}
+          {/*{subtasks.length > 0 && (*/}
+          {/*  <Chip*/}
+          {/*    label={`${completedSubtasks}/${subtasks.length}`}*/}
+          {/*    size="small"*/}
+          {/*    variant="outlined"*/}
+          {/*    sx={{ height: 18, fontSize: '0.65rem', '& .MuiChip-label': { px: 0.75 } }}*/}
+          {/*  />*/}
+          {/*)}*/}
           <IconButton edge="end" size="small" onClick={(e) => setMenuAnchor(e.currentTarget)}>
             <MoreVertIcon fontSize="small" />
           </IconButton>
@@ -262,6 +272,7 @@ export default function TaskItem({
       {showAdd && (
         <Box sx={{ pl: 5, pr: 7, mb: 0.5, display: 'flex', gap: 1 }}>
           <TextField
+            inputRef={subtaskInputRef}
             size="small"
             placeholder={t('addSubtaskPlaceholder')}
             value={newSubtask}
@@ -270,7 +281,6 @@ export default function TaskItem({
               if (e.key === 'Enter') handleAddSubtask();
               if (e.key === 'Escape') { setShowAdd(false); setNewSubtask(''); }
             }}
-            autoFocus
             fullWidth
           />
           <IconButton color="primary" size="small" onClick={handleAddSubtask}>
@@ -284,8 +294,9 @@ export default function TaskItem({
         <Box
           key={subtask.id}
           sx={{
-            ml: 2,
-            width: 'calc(100% - 16px)',
+            // ml: 0.5,
+            // pl: (depth +1) * 1.5,
+            // width: "calc(100% - 16px)",
           }}
         >
           <TaskItem

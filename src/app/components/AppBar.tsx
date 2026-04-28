@@ -60,20 +60,18 @@ export default function AppBarComponent() {
                         <ListItemIcon><HomeIcon fontSize="small" /></ListItemIcon>
                         {t('home')}
                     </MenuItem>
-                    {!session?.user && (
-                        <>
-                            <Divider />
-                            <MenuItem component={Link} href="/login" onClick={() => setMenuAnchor(null)}>
-                                <ListItemIcon><LoginIcon fontSize="small" /></ListItemIcon>
-                                {t('signIn')}
-                            </MenuItem>
-                            <MenuItem component={Link} href="/register" onClick={() => setMenuAnchor(null)}>
-                                <ListItemIcon><PersonAddIcon fontSize="small" /></ListItemIcon>
-                                {t('register')}
-                            </MenuItem>
-                            <Divider />
-                        </>
-                    )}
+                    {!session?.user && [
+                        <Divider key="divider-top" />,
+                        <MenuItem key="login" component={Link} href="/login" onClick={() => setMenuAnchor(null)}>
+                            <ListItemIcon><LoginIcon fontSize="small" /></ListItemIcon>
+                            {t('signIn')}
+                        </MenuItem>,
+                        <MenuItem key="register" component={Link} href="/register" onClick={() => setMenuAnchor(null)}>
+                            <ListItemIcon><PersonAddIcon fontSize="small" /></ListItemIcon>
+                            {t('register')}
+                        </MenuItem>,
+                        <Divider key="divider-bottom" />,
+                    ]}
                     <MenuItem component={Link} href="/changelog" onClick={() => setMenuAnchor(null)}>
                         <ListItemIcon><HistoryEduIcon fontSize="small" /></ListItemIcon>
                         {t('releaseHistory')}
