@@ -5,8 +5,6 @@ import { routing } from '@/i18n/routing';
 import ThemeRegistry from '@/app/components/ThemeRegistry';
 import AppBarComponent from '@/app/components/AppBar';
 import AuthProvider from '@/app/components/AuthProvider';
-import TelegramTools from '@/app/components/TelegramTools';
-import AgentChat from '@/app/components/AgentChat';
 import { SpheresRefetchProvider } from '@/app/components/SpheresRefetchContext';
 
 export default async function LocaleLayout({
@@ -32,12 +30,9 @@ export default async function LocaleLayout({
                 {children}
               </div>
             </div>
-            <AgentChat />
-            <TelegramTools />
           </SpheresRefetchProvider>
         </AuthProvider>
       </ThemeRegistry>
     </NextIntlClientProvider>
   );
 }
-
