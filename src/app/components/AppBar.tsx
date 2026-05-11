@@ -15,6 +15,7 @@ import Divider from '@mui/material/Divider';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import Drawer from '@mui/material/Drawer'; // Import Drawer
 import MenuIcon from '@mui/icons-material/Menu';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
@@ -23,15 +24,18 @@ import HomeIcon from '@mui/icons-material/Home';
 import LoginIcon from '@mui/icons-material/Login';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import HistoryEduIcon from '@mui/icons-material/HistoryEdu';
+import TelegramIcon from '@mui/icons-material/Telegram';
 import { useColorMode } from '@/app/components/ColorModeContext';
 import { useSession, signOut } from 'next-auth/react';
 import Tooltip from '@mui/material/Tooltip';
+import TelegramTools from './TelegramTools';
 
 export default function AppBarComponent() {
     const t = useTranslations('AppBar');
     const { mode, toggleColorMode } = useColorMode();
     const { data: session } = useSession();
     const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+    const [telegramToolsOpen, setTelegramToolsOpen] = useState(false);
     const locale = useLocale();
     const router = useRouter();
     const pathname = usePathname();
@@ -40,6 +44,15 @@ export default function AppBarComponent() {
         if (newLocale && newLocale !== locale) {
             router.replace(pathname, { locale: newLocale });
         }
+    };
+
+    const handleOpenTelegramTools = () => {
+        setTelegramToolsOpen(true);
+        setMenuAnchor(null);
+    };
+
+    const handleCloseTelegramTools = () => {
+        setTelegramToolsOpen(false);
     };
 
     return (
@@ -76,6 +89,12 @@ export default function AppBarComponent() {
                         <ListItemIcon><HistoryEduIcon fontSize="small" /></ListItemIcon>
                         {t('releaseHistory')}
                     </MenuItem>
+                    {session?.user && (
+                        <MenuItem onClick={handleOpenTelegramTools}>
+                            <ListItemIcon><TelegramIcon fontSize="small" /></ListItemIcon>
+                            {t('telegramTools')}
+                        </MenuItem>
+                    )}
                 </Menu>
 
                 <Typography variant="h6" component="div" sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }} />
@@ -118,6 +137,23 @@ export default function AppBarComponent() {
                     </>
                 )}
             </Toolbar>
+
+            {/* Telegram Tools Drawer */}
+            <Drawer
+                anchor="right"
+                open={telegramToolsOpen}
+                onClose={handleCloseTelegramTools}
+                slotProps={{
+                    paper: {
+                        sx: {
+                            width: { xs: 'calc(100vw - 48px)', sm: 360 },
+                            boxShadow: 8,
+                        },
+                    },
+                }}
+            >
+                <TelegramTools open={telegramToolsOpen} onClose={handleCloseTelegramTools} />
+            </Drawer>
         </AppBar>
     );
 }

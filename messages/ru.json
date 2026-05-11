@@ -7,7 +7,8 @@
     "todo": "Задачи",
     "taskgraph": "Древо задач",
     "history": "История",
-    "signOut": "Выйти"
+    "signOut": "Выйти",
+    "telegramTools": "Инструменты Telegram"
   },
   "Home": {
     "heroTitle": "Колесо жизни",
@@ -22,10 +23,10 @@
     "step1Body": "Честно поставьте оценку от 1 (очень неудовлетворён) до 10 (полностью процветаю) для каждой жизненной области.",
     "step2Title": "Найдите дисбаланс",
     "step2Body": "Перекошенное колесо покажет, какие важные части жизни вы упускаете.",
-    "step3Title": "Ставьте конкретные цели",
-    "step3Body": "Для каждой области, требующей внимания, создайте конкретные, выполнимые цели.",
-    "step4Title": "Следите за задачами",
-    "step4Body": "Разбейте цели на ежедневные задачи и отмечайте их выполнение, чтобы набрать импульс.",
+    "step3Title": "Set focused goals",
+    "step3Body": "For each area that needs attention, create concrete, actionable goals.",
+    "step4Title": "Track your tasks",
+    "step4Body": "Break goals into daily tasks and check them off to build momentum.",
     "rateSpheresTitle": "Оцените свои сферы",
     "rateSpheresDesc": "Поставьте честную оценку каждой жизненной области прямо сейчас. Вы также можете переименовать любую сферу.",
     "saveButton": "Сохранить оценки и создать колесо"
@@ -138,6 +139,8 @@
     "goals": "Цели",
     "addGoalPlaceholder": "Добавить цель...",
     "tasks": "Задачи",
+    "hideCompleted": "Скрыть выполненные задачи",
+    "showCompleted": "Показать выполненные задачи",
     "addTaskPlaceholder": "Добавить задачу..."
   },
   "TaskItem": {

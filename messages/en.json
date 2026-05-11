@@ -7,7 +7,8 @@
     "todo": "Todo",
     "taskgraph": "Task Graph",
     "history": "History",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "telegramTools": "Telegram Tools"
   },
   "Home": {
     "heroTitle": "Wheel of Life",
@@ -138,6 +139,8 @@
     "goals": "Goals",
     "addGoalPlaceholder": "Add a goal...",
     "tasks": "Tasks",
+    "hideCompleted": "Hide completed tasks",
+    "showCompleted": "Show completed tasks",
     "addTaskPlaceholder": "Add a task..."
   },
   "TaskItem": {
@@ -212,4 +215,3 @@
     "checkStatus": "Check status"
   }
 }
-
