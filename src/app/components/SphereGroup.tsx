@@ -74,7 +74,6 @@ export default function SphereGroup({
   onTaskLog,
   onGoalAdd,
   onGoalDelete,
-  onGoalEstimationChange: _onGoalEstimationChange,
   onSubtaskAdd,
   onSubtaskToggle,
   onSubtaskDelete,

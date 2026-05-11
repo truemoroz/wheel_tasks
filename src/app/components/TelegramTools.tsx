@@ -32,7 +32,7 @@ interface TelegramToolsProps {
 
 export default function TelegramTools({ open, onClose }: TelegramToolsProps) {
   const t = useTranslations('Feedback');
-  const { data: session, status: authStatus } = useSession();
+  const { status: authStatus } = useSession();
   const [tab, setTab] = useState(0);
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');

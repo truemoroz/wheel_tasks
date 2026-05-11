@@ -143,10 +143,12 @@ export default function AppBarComponent() {
                 anchor="right"
                 open={telegramToolsOpen}
                 onClose={handleCloseTelegramTools}
-                PaperProps={{
-                    sx: {
-                        width: { xs: 'calc(100vw - 48px)', sm: 360 },
-                        boxShadow: 8,
+                slotProps={{
+                    paper: {
+                        sx: {
+                            width: { xs: 'calc(100vw - 48px)', sm: 360 },
+                            boxShadow: 8,
+                        },
                     },
                 }}
             >
