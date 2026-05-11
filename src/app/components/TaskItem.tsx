@@ -44,6 +44,7 @@ interface TaskItemProps {
   onSubtaskAdd?: (taskId: string, title: string) => void;
   onSubtaskToggle?: (taskId: string, subtaskId: string) => void;
   onSubtaskDelete?: (taskId: string, subtaskId: string) => void;
+  showCompletedTasks?: boolean;
 }
 
 export default function TaskItem({
@@ -58,6 +59,7 @@ export default function TaskItem({
   onSubtaskAdd,
   onSubtaskToggle,
   onSubtaskDelete,
+  showCompletedTasks = true,
 }: TaskItemProps) {
   const t = useTranslations('TaskItem');
   const [showAdd, setShowAdd] = useState(false);
@@ -87,7 +89,7 @@ export default function TaskItem({
   };
 
   const subtasks = task.subtasks ?? [];
-  const completedSubtasks = subtasks.filter((s) => s.completed).length;
+  const visibleSubtasks = showCompletedTasks ? subtasks : subtasks.filter((subtask) => !subtask.completed);
   const sig = task.significance ?? 5;
   const recurring = task.recurring ?? false;
 
@@ -290,7 +292,7 @@ export default function TaskItem({
       )}
 
       {/* Subtasks — rendered recursively */}
-      {subtasks.map((subtask) => (
+      {visibleSubtasks.map((subtask) => (
         <Box
           key={subtask.id}
           sx={{
@@ -311,6 +313,7 @@ export default function TaskItem({
             onSubtaskAdd={onSubtaskAdd}
             onSubtaskToggle={onSubtaskToggle}
             onSubtaskDelete={onSubtaskDelete}
+            showCompletedTasks={showCompletedTasks}
           />
         </Box>
       ))}

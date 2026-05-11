@@ -22,8 +22,13 @@ import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
+import Drawer from '@mui/material/Drawer';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { LifeSphereGroup } from '@/app/types/todo';
 import TaskItem from '@/app/components/TaskItem';
+import AgentChat from '@/app/components/AgentChat';
 
 
 interface SphereGroupProps {
@@ -86,6 +91,8 @@ export default function SphereGroup({
   const [titleHovered, setTitleHovered] = useState(false);
   const [ratingAnchor, setRatingAnchor] = useState<null | HTMLElement>(null);
   const ratingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [agentChatOpen, setAgentChatOpen] = useState(false);
+  const [showCompletedTasks, setShowCompletedTasks] = useState(false);
 
   const openRating = (e: React.MouseEvent<HTMLElement>) => {
     if (ratingTimer.current) clearTimeout(ratingTimer.current);
@@ -127,7 +134,12 @@ export default function SphereGroup({
     }
   };
 
+  const visibleTasks = showCompletedTasks
+    ? group.tasks
+    : group.tasks.filter(task => !task.completed);
+
   const completedCount = group.tasks.filter((t) => t.completed).length;
+  const totalTasks = group.tasks.length;
 
   const sortedGoals = goalSort === 'default'
     ? group.goals
@@ -228,7 +240,7 @@ export default function SphereGroup({
           )}
 
           <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' }, whiteSpace: 'nowrap' }}>
-            {t('tasksCount', { completed: completedCount, total: group.tasks.length })}
+            {t('tasksCount', { completed: completedCount, total: totalTasks })}
           </Typography>
 
           {/* Rating chip — replaces the expand chevron */}
@@ -375,11 +387,23 @@ export default function SphereGroup({
         {/* Tasks */}
         {(view === 'full' || view === 'tasks') && (
           <>
-            <Typography variant="subtitle2" gutterBottom>
-              {t('tasks')}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <Typography variant="subtitle2" gutterBottom sx={{ mb: 0 }}>
+                {t('tasks')}
+              </Typography>
+              <IconButton size="small" onClick={() => setAgentChatOpen(true)} aria-label="open AI assistant">
+                <SmartToyIcon fontSize="small" />
+              </IconButton>
+              <IconButton
+                size="small"
+                onClick={() => setShowCompletedTasks((prev) => !prev)}
+                aria-label={showCompletedTasks ? t('hideCompleted') : t('showCompleted')}
+              >
+                {showCompletedTasks ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+              </IconButton>
+            </Box>
             <List dense>
-              {[...group.tasks].sort((a, b) => (b.significance ?? 5) - (a.significance ?? 5)).map((task) => (
+              {[...visibleTasks].sort((a, b) => (b.significance ?? 5) - (a.significance ?? 5)).map((task) => (
                 <TaskItem
                   key={task.id}
                   task={task}
@@ -392,6 +416,7 @@ export default function SphereGroup({
                   onSubtaskAdd={(taskId, title) => onSubtaskAdd?.(group.id, taskId, title)}
                   onSubtaskToggle={(taskId, subtaskId) => onSubtaskToggle?.(group.id, taskId, subtaskId)}
                   onSubtaskDelete={(taskId, subtaskId) => onSubtaskDelete?.(group.id, taskId, subtaskId)}
+                  showCompletedTasks={showCompletedTasks}
                 />
               ))}
             </List>
@@ -411,6 +436,21 @@ export default function SphereGroup({
           </>
         )}
       </AccordionDetails>
+      <Drawer
+        anchor="right"
+        open={agentChatOpen}
+        onClose={() => setAgentChatOpen(false)}
+        slotProps={{
+          paper: {
+            sx: {
+              width: { xs: 'calc(100vw - 48px)', sm: 360 },
+              boxShadow: 8,
+            },
+          },
+        }}
+      >
+        <AgentChat open={agentChatOpen} onClose={() => setAgentChatOpen(false)} sphereId={group.id} />
+      </Drawer>
     </Accordion>
   );
 }

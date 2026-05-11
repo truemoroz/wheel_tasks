@@ -37,7 +37,7 @@ export async function GET() {
   );
 
   return NextResponse.json({
-    hint: 'Copy the "id" of your chat and set it as TELEGRAM_CHAT_ID in .env.local',
+    hint: 'Copy the "id" of your chat and set it as TELEGRAM_CHAT_ID in .env.local.local',
     chats,
     rawUpdates: data.result,
   });
