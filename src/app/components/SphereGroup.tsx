@@ -22,13 +22,8 @@ import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
-import Drawer from '@mui/material/Drawer';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { LifeSphereGroup } from '@/app/types/todo';
-import TaskItem from '@/app/components/TaskItem';
-import AgentChat from '@/app/components/AgentChat';
+import SphereTasks from '@/app/components/SphereTasks';
 
 
 interface SphereGroupProps {
@@ -38,6 +33,7 @@ interface SphereGroupProps {
   onTaskToggle: (groupId: string, taskId: string) => void;
   onTaskAdd: (groupId: string, title: string) => void;
   onTaskDelete: (groupId: string, taskId: string) => void;
+  onTaskTitleChange?: (groupId: string, taskId: string, title: string) => void;
   onTaskSignificanceChange?: (groupId: string, taskId: string, significance: number) => void;
   onTaskRecurringToggle?: (groupId: string, taskId: string) => void;
   onTaskLog?: (groupId: string, taskId: string) => Promise<void>;
@@ -69,6 +65,7 @@ export default function SphereGroup({
   onTaskToggle,
   onTaskAdd,
   onTaskDelete,
+  onTaskTitleChange,
   onTaskSignificanceChange,
   onTaskRecurringToggle,
   onTaskLog,
@@ -83,15 +80,12 @@ export default function SphereGroup({
   onExpandedChange,
 }: SphereGroupProps) {
   const t = useTranslations('SphereGroup');
-  const [newTask, setNewTask] = useState('');
   const [newGoal, setNewGoal] = useState('');
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(group.name);
   const [titleHovered, setTitleHovered] = useState(false);
   const [ratingAnchor, setRatingAnchor] = useState<null | HTMLElement>(null);
   const ratingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [agentChatOpen, setAgentChatOpen] = useState(false);
-  const [showCompletedTasks, setShowCompletedTasks] = useState(false);
 
   const openRating = (e: React.MouseEvent<HTMLElement>) => {
     if (ratingTimer.current) clearTimeout(ratingTimer.current);
@@ -119,23 +113,12 @@ export default function SphereGroup({
     setEditingName(false);
   };
 
-  const handleAddTask = () => {
-    if (newTask.trim()) {
-      onTaskAdd(group.id, newTask.trim());
-      setNewTask('');
-    }
-  };
-
   const handleAddGoal = () => {
     if (newGoal.trim()) {
       onGoalAdd(group.id, newGoal.trim());
       setNewGoal('');
     }
   };
-
-  const visibleTasks = showCompletedTasks
-    ? group.tasks
-    : group.tasks.filter(task => !task.completed);
 
   const completedCount = group.tasks.filter((t) => t.completed).length;
   const totalTasks = group.tasks.length;
@@ -310,24 +293,6 @@ export default function SphereGroup({
         </Box>
       </AccordionSummary>
       <AccordionDetails>
-        {/* Rating Slider */}
-        {/*{(view === 'full' || view === 'goals') && (*/}
-        {/*  <Box sx={{ mb: 3 }}>*/}
-        {/*    <Typography variant="subtitle2" gutterBottom>*/}
-        {/*      Current State Rating*/}
-        {/*    </Typography>*/}
-        {/*    <Slider*/}
-        {/*      value={sliderValue}*/}
-        {/*      min={1}*/}
-        {/*      max={10}*/}
-        {/*      step={1}*/}
-        {/*      marks*/}
-        {/*      valueLabelDisplay="auto"*/}
-        {/*      onChange={(_, value) => setSliderValue(value as number)}*/}
-        {/*      onChangeCommitted={(_, value) => onRatingChange(group.id, value as number)}*/}
-        {/*    />*/}
-        {/*  </Box>*/}
-        {/*)}*/}
         {(view === 'full' || view === 'goals') && <Divider sx={{ mb: 2 }} />}
         {/* Goals */}
         {(view === 'full' || view === 'goals') && (
@@ -341,19 +306,6 @@ export default function SphereGroup({
                   key={goal.id}
                   secondaryAction={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      {/*<TextField*/}
-                      {/*  size="small"*/}
-                      {/*  helperText="Estimation"*/}
-                      {/*  // type="number"*/}
-                      {/*  placeholder="Est."*/}
-                      {/*  value={goal.estimation ?? ''}*/}
-                      {/*  onChange={(e) => {*/}
-                      {/*    const val = e.target.value === '' ? null : Number(e.target.value);*/}
-                      {/*    onGoalEstimationChange?.(group.id, goal.id, val);*/}
-                      {/*  }}*/}
-                      {/*  slotProps={{ htmlInput: { min: 1, style: { width: 36 } } }}*/}
-                      {/*  sx={{ width: { xs: 60, sm: 72 } }}*/}
-                      {/*/>*/}
                       <IconButton edge="end" size="small" onClick={() => onGoalDelete(group.id, goal.id)}>
                         <DeleteIcon fontSize="small" />
                       </IconButton>
@@ -385,71 +337,21 @@ export default function SphereGroup({
         {view === 'full' && <Divider sx={{ mb: 2 }} />}
         {/* Tasks */}
         {(view === 'full' || view === 'tasks') && (
-          <>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <Typography variant="subtitle2" gutterBottom sx={{ mb: 0 }}>
-                {t('tasks')}
-              </Typography>
-              <IconButton size="small" onClick={() => setAgentChatOpen(true)} aria-label="open AI assistant">
-                <SmartToyIcon fontSize="small" />
-              </IconButton>
-              <IconButton
-                size="small"
-                onClick={() => setShowCompletedTasks((prev) => !prev)}
-                aria-label={showCompletedTasks ? t('hideCompleted') : t('showCompleted')}
-              >
-                {showCompletedTasks ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
-              </IconButton>
-            </Box>
-            <List dense>
-              {[...visibleTasks].sort((a, b) => (b.significance ?? 5) - (a.significance ?? 5)).map((task) => (
-                <TaskItem
-                  key={task.id}
-                  task={task}
-                  groupId={group.id}
-                  onToggle={() => onTaskToggle(group.id, task.id)}
-                  onDelete={() => onTaskDelete(group.id, task.id)}
-                  onSignificanceChange={(taskId, sig) => onTaskSignificanceChange?.(group.id, taskId, sig)}
-                  onRecurringToggle={(taskId) => onTaskRecurringToggle?.(group.id, taskId)}
-                  onLog={onTaskLog}
-                  onSubtaskAdd={(taskId, title) => onSubtaskAdd?.(group.id, taskId, title)}
-                  onSubtaskToggle={(taskId, subtaskId) => onSubtaskToggle?.(group.id, taskId, subtaskId)}
-                  onSubtaskDelete={(taskId, subtaskId) => onSubtaskDelete?.(group.id, taskId, subtaskId)}
-                  showCompletedTasks={showCompletedTasks}
-                />
-              ))}
-            </List>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <TextField
-                size="small"
-                placeholder={t('addTaskPlaceholder')}
-                value={newTask}
-                onChange={(e) => setNewTask(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
-                fullWidth
-              />
-              <IconButton color="primary" onClick={handleAddTask}>
-                <AddIcon />
-              </IconButton>
-            </Box>
-          </>
+          <SphereTasks
+            group={group}
+            onTaskToggle={onTaskToggle}
+            onTaskAdd={onTaskAdd}
+            onTaskDelete={onTaskDelete}
+            onTaskTitleChange={onTaskTitleChange}
+            onTaskSignificanceChange={onTaskSignificanceChange}
+            onTaskRecurringToggle={onTaskRecurringToggle}
+            onTaskLog={onTaskLog}
+            onSubtaskAdd={onSubtaskAdd}
+            onSubtaskToggle={onSubtaskToggle}
+            onSubtaskDelete={onSubtaskDelete}
+          />
         )}
       </AccordionDetails>
-      <Drawer
-        anchor="right"
-        open={agentChatOpen}
-        onClose={() => setAgentChatOpen(false)}
-        slotProps={{
-          paper: {
-            sx: {
-              width: { xs: 'calc(100vw - 48px)', sm: 360 },
-              boxShadow: 8,
-            },
-          },
-        }}
-      >
-        <AgentChat open={agentChatOpen} onClose={() => setAgentChatOpen(false)} sphereId={group.id} />
-      </Drawer>
     </Accordion>
   );
 }

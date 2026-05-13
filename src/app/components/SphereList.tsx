@@ -77,18 +77,11 @@ export default function SphereList() {
   const [selectedSphereId, setSelectedSphereId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerExpanded, setDrawerExpanded] = useState(false);
+  const optimisticSubtaskIdRef = useRef(0);
   const touchStartYRef = useRef(0);
   const hasLoadedOnce = useRef(false);
 
-  // Reset expanded state whenever the drawer closes
   useEffect(() => {
-    if (!drawerOpen) setDrawerExpanded(false);
-  }, [drawerOpen]);
-
-  useEffect(() => {
-    if (!hasLoadedOnce.current) {
-      setLoading(true);
-    }
     fetch('/api/spheres')
       .then((res) => res.json())
       .then(async (data) => {
@@ -213,6 +206,26 @@ export default function SphereList() {
     }
   };
 
+  const handleTaskTitleChange = async (groupId: string, taskId: string, title: string) => {
+    // Optimistic update
+    setSpheres((prev) =>
+      prev.map((s) =>
+        s.id === groupId
+          ? { ...s, tasks: updateTaskInTree(s.tasks, taskId, { title }) }
+          : s,
+      ),
+    );
+    const res = await fetch(`/api/spheres/${groupId}/tasks/${taskId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setSpheres((prev) => updateSphere(prev, updated));
+    }
+  };
+
   const handleTaskSignificanceChange = async (groupId: string, taskId: string, significance: number) => {
     // Optimistic update
     setSpheres((prev) =>
@@ -316,7 +329,8 @@ export default function SphereList() {
   };
 
   const handleSubtaskAdd = async (groupId: string, taskId: string, title: string) => {
-    const tempId = `st-${Date.now()}`;
+    const tempId = `st-temp-${optimisticSubtaskIdRef.current}`;
+    optimisticSubtaskIdRef.current += 1;
     const newSubtask = { id: tempId, title, completed: false, significance: 5, recurring: false, subtasks: [] };
     // Optimistic update — works at any depth
     setSpheres((prev) =>
@@ -400,6 +414,7 @@ export default function SphereList() {
     onTaskToggle: handleTaskToggle,
     onTaskAdd: handleTaskAdd,
     onTaskDelete: handleTaskDelete,
+    onTaskTitleChange: handleTaskTitleChange,
     onTaskSignificanceChange: handleTaskSignificanceChange,
     onTaskRecurringToggle: handleTaskRecurringToggle,
     onTaskLog: handleTaskLog,
@@ -502,15 +517,17 @@ export default function SphereList() {
         onClose={() => { setDrawerExpanded(false); setDrawerOpen(false); }}
         disableSwipeToOpen
         ModalProps={{ keepMounted: true }}
-        PaperProps={{
-          sx: {
-            borderTopLeftRadius: drawerExpanded ? 0 : 16,
-            borderTopRightRadius: drawerExpanded ? 0 : 16,
-            maxHeight: drawerExpanded ? '100dvh' : '85dvh',
-            height: drawerExpanded ? '100dvh' : undefined,
-            display: 'flex',
-            flexDirection: 'column',
-            transition: 'max-height 0.3s ease, height 0.3s ease, border-radius 0.2s ease',
+        slotProps={{
+          paper: {
+            sx: {
+              borderTopLeftRadius: drawerExpanded ? 0 : 16,
+              borderTopRightRadius: drawerExpanded ? 0 : 16,
+              maxHeight: drawerExpanded ? '100dvh' : '85dvh',
+              height: drawerExpanded ? '100dvh' : undefined,
+              display: 'flex',
+              flexDirection: 'column',
+              transition: 'max-height 0.3s ease, height 0.3s ease, border-radius 0.2s ease',
+            },
           },
         }}
       >
@@ -536,7 +553,11 @@ export default function SphereList() {
           <Typography variant="subtitle1" fontWeight={600} sx={{ flexGrow: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {selectedSphere?.name ?? ''}
           </Typography>
-          <IconButton size="small" onClick={() => setDrawerOpen(false)} aria-label={t('close')}>
+          <IconButton
+            size="small"
+            onClick={() => { setDrawerExpanded(false); setDrawerOpen(false); }}
+            aria-label={t('close')}
+          >
             <CloseIcon fontSize="small" />
           </IconButton>
         </Box>
