@@ -24,12 +24,75 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import ShortcutIcon from '@mui/icons-material/Shortcut';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import EditIcon from '@mui/icons-material/Edit';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
 import { Task } from '@/app/types/todo';
 
 function getSignificanceColor(sig: number): 'error' | 'warning' | 'success' | 'default' {
   if (sig >= 8) return 'error';
   if (sig >= 5) return 'warning';
   return 'success';
+}
+
+const URL_PATTERN = /[a-z][a-z0-9+.-]*:\/\/[^\s]+/gi;
+const UNSAFE_PROTOCOLS = new Set(['javascript:', 'data:', 'vbscript:']);
+
+function getLinkLabel(url: string) {
+  return url.length > 20 ? `${url.slice(0, 17)}...` : url;
+}
+
+function isClickableUrl(url: string) {
+  try {
+    return !UNSAFE_PROTOCOLS.has(new URL(url).protocol);
+  } catch {
+    return false;
+  }
+}
+
+function renderTaskTitle(title: string) {
+  const parts = [];
+  let lastIndex = 0;
+
+  for (const match of title.matchAll(URL_PATTERN)) {
+    const url = match[0];
+    const index = match.index ?? 0;
+
+    if (index > lastIndex) {
+      parts.push(title.slice(lastIndex, index));
+    }
+
+    parts.push(
+      isClickableUrl(url) ? (
+        <Box
+          key={`${url}-${index}`}
+          component="a"
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={url}
+          onClick={(e) => e.stopPropagation()}
+          sx={{
+            color: 'primary.main',
+            textDecoration: 'underline',
+            textUnderlineOffset: '2px',
+            overflowWrap: 'anywhere',
+          }}
+        >
+          {getLinkLabel(url)}
+        </Box>
+      ) : (
+        url
+      ),
+    );
+    lastIndex = index + url.length;
+  }
+
+  if (lastIndex < title.length) {
+    parts.push(title.slice(lastIndex));
+  }
+
+  return parts.length > 0 ? parts : title;
 }
 
 interface TaskItemProps {
@@ -41,6 +104,7 @@ interface TaskItemProps {
   onSignificanceChange?: (taskId: string, significance: number) => void;
   onRecurringToggle?: (taskId: string) => void;
   onLog?: (groupId: string, taskId: string) => Promise<void>;
+  onTitleChange?: (taskId: string, title: string) => void;
   onSubtaskAdd?: (taskId: string, title: string) => void;
   onSubtaskToggle?: (taskId: string, subtaskId: string) => void;
   onSubtaskDelete?: (taskId: string, subtaskId: string) => void;
@@ -56,6 +120,7 @@ export default function TaskItem({
   onSignificanceChange,
   onRecurringToggle,
   onLog,
+  onTitleChange,
   onSubtaskAdd,
   onSubtaskToggle,
   onSubtaskDelete,
@@ -64,11 +129,14 @@ export default function TaskItem({
   const t = useTranslations('TaskItem');
   const [showAdd, setShowAdd] = useState(false);
   const [newSubtask, setNewSubtask] = useState('');
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleValue, setTitleValue] = useState(task.title);
   const [justLogged, setJustLogged] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [sigAnchor, setSigAnchor] = useState<null | HTMLElement>(null);
   const sigTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const subtaskInputRef = useRef<HTMLInputElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (showAdd) {
@@ -76,6 +144,13 @@ export default function TaskItem({
       return () => clearTimeout(timer);
     }
   }, [showAdd]);
+
+  useEffect(() => {
+    if (editingTitle) {
+      const timer = setTimeout(() => titleInputRef.current?.focus(), 150);
+      return () => clearTimeout(timer);
+    }
+  }, [editingTitle]);
 
   const openSig = (e: React.MouseEvent<HTMLElement>) => {
     if (sigTimer.current) clearTimeout(sigTimer.current);
@@ -99,6 +174,21 @@ export default function TaskItem({
       setNewSubtask('');
       setShowAdd(false);
     }
+  };
+
+  const handleSaveTitle = () => {
+    const title = titleValue.trim();
+    if (title && title !== task.title) {
+      onTitleChange?.(task.id, title);
+    } else {
+      setTitleValue(task.title);
+    }
+    setEditingTitle(false);
+  };
+
+  const handleCancelTitle = () => {
+    setTitleValue(task.title);
+    setEditingTitle(false);
   };
 
   const handleLog = async () => {
@@ -197,22 +287,43 @@ export default function TaskItem({
           )}
         </ListItemIcon>
 
-        {/* Title — grows and clips */}
-        <ListItemText
-          primary={task.title}
-          sx={{
-            flexGrow: 1,
-            minWidth: 0,
-            m: 0,
-            alignSelf: 'center',
-            '& .MuiListItemText-primary': {
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            },
-            textDecoration: !recurring && task.completed ? 'line-through' : 'none',
-            opacity: !recurring && task.completed ? 0.6 : 1,
-          }}
-        />
+        {editingTitle ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexGrow: 1, minWidth: 0 }}>
+            <TextField
+              inputRef={titleInputRef}
+              size="small"
+              value={titleValue}
+              onChange={(e) => setTitleValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveTitle();
+                if (e.key === 'Escape') handleCancelTitle();
+              }}
+              fullWidth
+            />
+            <IconButton size="small" color="primary" onClick={handleSaveTitle} aria-label={t('saveTask')}>
+              <CheckIcon fontSize="small" />
+            </IconButton>
+            <IconButton size="small" onClick={handleCancelTitle} aria-label={t('cancelEdit')}>
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        ) : (
+          <ListItemText
+            primary={renderTaskTitle(task.title)}
+            sx={{
+              flexGrow: 1,
+              minWidth: 0,
+              m: 0,
+              alignSelf: 'center',
+              '& .MuiListItemText-primary': {
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              },
+              textDecoration: !recurring && task.completed ? 'line-through' : 'none',
+              opacity: !recurring && task.completed ? 0.6 : 1,
+            }}
+          />
+        )}
 
         {/* Right-side actions — fixed width, never shrinks */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0, ml: 0.5 }}>
@@ -230,14 +341,6 @@ export default function TaskItem({
               </IconButton>
             </Tooltip>
           )}
-          {/*{subtasks.length > 0 && (*/}
-          {/*  <Chip*/}
-          {/*    label={`${completedSubtasks}/${subtasks.length}`}*/}
-          {/*    size="small"*/}
-          {/*    variant="outlined"*/}
-          {/*    sx={{ height: 18, fontSize: '0.65rem', '& .MuiChip-label': { px: 0.75 } }}*/}
-          {/*  />*/}
-          {/*)}*/}
           <IconButton edge="end" size="small" onClick={(e) => setMenuAnchor(e.currentTarget)}>
             <MoreVertIcon fontSize="small" />
           </IconButton>
@@ -247,6 +350,12 @@ export default function TaskItem({
             onClose={() => setMenuAnchor(null)}
             slotProps={{ paper: { sx: { minWidth: 200 } } }}
           >
+            <MenuItem onClick={() => { setTitleValue(task.title); setEditingTitle(true); setMenuAnchor(null); }}>
+              <ListItemIcon>
+                <EditIcon fontSize="small" />
+              </ListItemIcon>
+              {t('editTask')}
+            </MenuItem>
             <MenuItem onClick={() => { setShowAdd((v) => !v); setMenuAnchor(null); }}>
               <ListItemIcon>
                 <AddIcon fontSize="small" color={showAdd ? 'primary' : 'inherit'} />
@@ -310,6 +419,7 @@ export default function TaskItem({
             onSignificanceChange={onSignificanceChange}
             onRecurringToggle={onRecurringToggle}
             onLog={onLog}
+            onTitleChange={onTitleChange}
             onSubtaskAdd={onSubtaskAdd}
             onSubtaskToggle={onSubtaskToggle}
             onSubtaskDelete={onSubtaskDelete}

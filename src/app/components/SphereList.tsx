@@ -213,6 +213,26 @@ export default function SphereList() {
     }
   };
 
+  const handleTaskTitleChange = async (groupId: string, taskId: string, title: string) => {
+    // Optimistic update
+    setSpheres((prev) =>
+      prev.map((s) =>
+        s.id === groupId
+          ? { ...s, tasks: updateTaskInTree(s.tasks, taskId, { title }) }
+          : s,
+      ),
+    );
+    const res = await fetch(`/api/spheres/${groupId}/tasks/${taskId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setSpheres((prev) => updateSphere(prev, updated));
+    }
+  };
+
   const handleTaskSignificanceChange = async (groupId: string, taskId: string, significance: number) => {
     // Optimistic update
     setSpheres((prev) =>
@@ -400,6 +420,7 @@ export default function SphereList() {
     onTaskToggle: handleTaskToggle,
     onTaskAdd: handleTaskAdd,
     onTaskDelete: handleTaskDelete,
+    onTaskTitleChange: handleTaskTitleChange,
     onTaskSignificanceChange: handleTaskSignificanceChange,
     onTaskRecurringToggle: handleTaskRecurringToggle,
     onTaskLog: handleTaskLog,
