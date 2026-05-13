@@ -57,12 +57,14 @@ const taskDonePulse = keyframes`
   100% { transform: scale(1); box-shadow: 0 0 0 18px rgba(102, 187, 106, 0); }
 `;
 
-const particleBurst = keyframes`
+function createParticleBurst(x: number, y: number) {
+  return keyframes`
   0% { opacity: 0; transform: translate(-50%, -50%) scale(0.35) rotate(0deg); }
   15% { opacity: 1; }
   70% { opacity: 1; }
-  100% { opacity: 0; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1.15) rotate(260deg); }
+  100% { opacity: 0; transform: translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(1.15) rotate(260deg); }
 `;
+}
 
 function getLinkLabel(url: string) {
   return url.length > 20 ? `${url.slice(0, 17)}...` : url;
@@ -436,8 +438,6 @@ export default function TaskItem({
                   key={`${particle.x}-${particle.y}`}
                   component="span"
                   sx={{
-                    '--x': `${particle.x}px`,
-                    '--y': `${particle.y}px`,
                     position: 'absolute',
                     left: 0,
                     top: 0,
@@ -445,7 +445,7 @@ export default function TaskItem({
                     height: particle.size,
                     borderRadius: '2px',
                     bgcolor: particle.color,
-      animation: `${particleBurst} 1400ms ease-out ${particle.delay}ms both`,
+                    animation: `${createParticleBurst(particle.x, particle.y)} 1400ms ease-out ${particle.delay}ms both`,
                   }}
                 />
               ))}
