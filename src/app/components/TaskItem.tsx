@@ -27,6 +27,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import EditIcon from '@mui/icons-material/Edit';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
+import { keyframes } from '@emotion/react';
 import { Task } from '@/app/types/todo';
 
 function getSignificanceColor(sig: number): 'error' | 'warning' | 'success' | 'default' {
@@ -37,6 +38,31 @@ function getSignificanceColor(sig: number): 'error' | 'warning' | 'success' | 'd
 
 const URL_PATTERN = /[a-z][a-z0-9+.-]*:\/\/[^\s]+/gi;
 const UNSAFE_PROTOCOLS = new Set(['javascript:', 'data:', 'vbscript:']);
+const CELEBRATION_PARTICLES = [
+  { x: -52, y: -42, color: '#66bb6a', size: 7, delay: 0 },
+  { x: -30, y: -66, color: '#ffa726', size: 6, delay: 45 },
+  { x: 8, y: -72, color: '#29b6f6', size: 7, delay: 90 },
+  { x: 48, y: -50, color: '#f48fb1', size: 6, delay: 135 },
+  { x: 62, y: -12, color: '#7729ef', size: 7, delay: 180 },
+  { x: 42, y: 30, color: '#2e7d32', size: 6, delay: 225 },
+  { x: -6, y: 44, color: '#ffca28', size: 7, delay: 270 },
+  { x: -50, y: 22, color: '#26c6da', size: 6, delay: 315 },
+  { x: -72, y: -8, color: '#ab47bc', size: 7, delay: 360 },
+  { x: 76, y: -36, color: '#ef5350', size: 6, delay: 405 },
+];
+
+const taskDonePulse = keyframes`
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(102, 187, 106, 0); }
+  30% { transform: scale(1.02); box-shadow: 0 0 0 6px rgba(102, 187, 106, 0.34); }
+  100% { transform: scale(1); box-shadow: 0 0 0 18px rgba(102, 187, 106, 0); }
+`;
+
+const particleBurst = keyframes`
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.35) rotate(0deg); }
+  15% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1.15) rotate(260deg); }
+`;
 
 function getLinkLabel(url: string) {
   return url.length > 20 ? `${url.slice(0, 17)}...` : url;
@@ -72,12 +98,12 @@ function renderTaskTitle(title: string) {
           rel="noopener noreferrer"
           title={url}
           onClick={(e) => e.stopPropagation()}
-          sx={{
-            color: 'primary.main',
+          sx={(theme) => ({
+            color: theme.palette.mode === 'dark' ? theme.palette.text.primary : theme.palette.primary.main,
             textDecoration: 'underline',
             textUnderlineOffset: '2px',
             overflowWrap: 'anywhere',
-          }}
+          })}
         >
           {getLinkLabel(url)}
         </Box>
@@ -93,6 +119,79 @@ function renderTaskTitle(title: string) {
   }
 
   return parts.length > 0 ? parts : title;
+}
+
+function launchCompletionBurst(source: HTMLElement) {
+  if (typeof document === 'undefined') return;
+
+  const sourceRect = source.getBoundingClientRect();
+  const rect = sourceRect.width || sourceRect.height || !source.parentElement
+    ? sourceRect
+    : source.parentElement.getBoundingClientRect();
+  const originX = rect.left + rect.width / 2;
+  const originY = rect.top + rect.height / 2;
+  const container = document.createElement('div');
+  let removed = false;
+
+  Object.assign(container.style, {
+    position: 'fixed',
+    left: `${originX}px`,
+    top: `${originY}px`,
+    width: '1px',
+    height: '1px',
+    pointerEvents: 'none',
+    zIndex: '2147483647',
+  });
+
+  document.body.appendChild(container);
+
+  const animations = CELEBRATION_PARTICLES.map((particle) => {
+    const element = document.createElement('span');
+
+    Object.assign(element.style, {
+      position: 'absolute',
+      left: '0',
+      top: '0',
+      width: `${particle.size}px`,
+      height: `${particle.size}px`,
+      borderRadius: '2px',
+      backgroundColor: particle.color,
+      transform: 'translate(-50%, -50%) scale(0.35)',
+      opacity: '0',
+    });
+
+    container.appendChild(element);
+
+    return element.animate(
+      [
+        { opacity: 0, transform: 'translate(-50%, -50%) scale(0.35) rotate(0deg)' },
+        { opacity: 1, offset: 0.18 },
+        { opacity: 1, offset: 0.7 },
+        {
+          opacity: 0,
+          transform: `translate(calc(-50% + ${particle.x}px), calc(-50% + ${particle.y}px)) scale(1.15) rotate(260deg)`,
+        },
+      ],
+      {
+        duration: 1400,
+        delay: particle.delay,
+        easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+        fill: 'both',
+      },
+    );
+  });
+
+  const cleanup = () => {
+    if (removed) return;
+    removed = true;
+    container.remove();
+  };
+
+  const timeout = window.setTimeout(cleanup, 2200);
+  void Promise.allSettled(animations.map((animation) => animation.finished)).then(() => {
+    window.clearTimeout(timeout);
+    cleanup();
+  });
 }
 
 interface TaskItemProps {
@@ -127,14 +226,18 @@ export default function TaskItem({
   showCompletedTasks = true,
 }: TaskItemProps) {
   const t = useTranslations('TaskItem');
+  const recurring = task.recurring ?? false;
   const [showAdd, setShowAdd] = useState(false);
   const [newSubtask, setNewSubtask] = useState('');
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState(task.title);
   const [justLogged, setJustLogged] = useState(false);
+  const [celebrating, setCelebrating] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [sigAnchor, setSigAnchor] = useState<null | HTMLElement>(null);
   const sigTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const celebrationFrameRef = useRef<number | null>(null);
+  const celebrationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const subtaskInputRef = useRef<HTMLInputElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
@@ -152,6 +255,15 @@ export default function TaskItem({
     }
   }, [editingTitle]);
 
+  useEffect(() => () => {
+    if (celebrationFrameRef.current !== null) {
+      cancelAnimationFrame(celebrationFrameRef.current);
+    }
+    if (celebrationTimerRef.current !== null) {
+      clearTimeout(celebrationTimerRef.current);
+    }
+  }, []);
+
   const openSig = (e: React.MouseEvent<HTMLElement>) => {
     if (sigTimer.current) clearTimeout(sigTimer.current);
     setSigAnchor(e.currentTarget);
@@ -166,7 +278,6 @@ export default function TaskItem({
   const subtasks = task.subtasks ?? [];
   const visibleSubtasks = showCompletedTasks ? subtasks : subtasks.filter((subtask) => !subtask.completed);
   const sig = task.significance ?? 5;
-  const recurring = task.recurring ?? false;
 
   const handleAddSubtask = () => {
     if (newSubtask.trim()) {
@@ -184,6 +295,33 @@ export default function TaskItem({
       setTitleValue(task.title);
     }
     setEditingTitle(false);
+  };
+
+  const startCelebration = () => {
+    if (celebrationFrameRef.current !== null) {
+      cancelAnimationFrame(celebrationFrameRef.current);
+    }
+    if (celebrationTimerRef.current !== null) {
+      clearTimeout(celebrationTimerRef.current);
+    }
+
+    setCelebrating(false);
+    celebrationFrameRef.current = requestAnimationFrame(() => {
+      setCelebrating(true);
+      celebrationFrameRef.current = null;
+    });
+    celebrationTimerRef.current = setTimeout(() => {
+      setCelebrating(false);
+      celebrationTimerRef.current = null;
+    }, 1800);
+  };
+
+  const handleToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!recurring && !task.completed) {
+      launchCompletionBurst(event.currentTarget);
+      startCelebration();
+    }
+    onToggle();
   };
 
   const handleCancelTitle = () => {
@@ -256,7 +394,12 @@ export default function TaskItem({
         sx={{
           display: 'flex',
           alignItems: 'center',
+          position: 'relative',
+          overflow: 'visible',
           gap: 0,
+          ...(celebrating ? {
+            animation: `${taskDonePulse} 1200ms ease-out`,
+          } : {}),
           ...(depth === 0 ? {
             borderLeft: '3px solid',
             borderColor: task.completed && !task.recurring ? 'action.disabled' : 'primary.main',
@@ -275,6 +418,39 @@ export default function TaskItem({
       >
         {/* Leading icon / checkbox */}
         <ListItemIcon sx={{ minWidth: 32, flexShrink: 0, alignItems: 'center' }}>
+          {celebrating && (
+            <Box
+              aria-hidden
+              sx={{
+                position: 'absolute',
+                left: depth > 0 ? 28 + depth * 16 : 22,
+                top: '50%',
+                width: 1,
+                height: 1,
+                pointerEvents: 'none',
+                zIndex: 1,
+              }}
+            >
+              {CELEBRATION_PARTICLES.map((particle) => (
+                <Box
+                  key={`${particle.x}-${particle.y}`}
+                  component="span"
+                  sx={{
+                    '--x': `${particle.x}px`,
+                    '--y': `${particle.y}px`,
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    width: particle.size,
+                    height: particle.size,
+                    borderRadius: '2px',
+                    bgcolor: particle.color,
+      animation: `${particleBurst} 1400ms ease-out ${particle.delay}ms both`,
+                  }}
+                />
+              ))}
+            </Box>
+          )}
           {depth > 0 && (
             <ShortcutIcon sx={{ fontSize: 14, color: 'text.secondary', mr: 0.5, transform: 'scaleY(-1)' }} />
           )}
@@ -283,7 +459,7 @@ export default function TaskItem({
               <RepeatIcon fontSize="small" color="primary" sx={{ ml: '2px' }} />
             </Tooltip>
           ) : (
-            <Checkbox edge="start" checked={task.completed} onChange={onToggle} size="small" />
+            <Checkbox edge="start" checked={task.completed} onChange={handleToggle} size="small" />
           )}
         </ListItemIcon>
 
