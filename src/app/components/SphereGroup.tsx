@@ -22,7 +22,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
-import { LifeSphereGroup } from '@/app/types/todo';
+import { LifeSphereGroup, LinkedTaskOption } from '@/app/types/todo';
 import SphereTasks from '@/app/components/SphereTasks';
 
 
@@ -36,6 +36,8 @@ interface SphereGroupProps {
   onTaskTitleChange?: (groupId: string, taskId: string, title: string) => void;
   onTaskSignificanceChange?: (groupId: string, taskId: string, significance: number) => void;
   onTaskRecurringToggle?: (groupId: string, taskId: string) => void;
+  onTaskLinksChange?: (groupId: string, taskId: string, linkedTaskIds: string[]) => void;
+  taskLinkOptions?: LinkedTaskOption[];
   onTaskLog?: (groupId: string, taskId: string) => Promise<void>;
   onGoalAdd: (groupId: string, title: string) => void;
   onGoalDelete: (groupId: string, goalId: string) => void;
@@ -68,6 +70,8 @@ export default function SphereGroup({
   onTaskTitleChange,
   onTaskSignificanceChange,
   onTaskRecurringToggle,
+  onTaskLinksChange,
+  taskLinkOptions = [],
   onTaskLog,
   onGoalAdd,
   onGoalDelete,
@@ -345,6 +349,8 @@ export default function SphereGroup({
             onTaskTitleChange={onTaskTitleChange}
             onTaskSignificanceChange={onTaskSignificanceChange}
             onTaskRecurringToggle={onTaskRecurringToggle}
+            onTaskLinksChange={onTaskLinksChange}
+            taskLinkOptions={taskLinkOptions}
             onTaskLog={onTaskLog}
             onSubtaskAdd={onSubtaskAdd}
             onSubtaskToggle={onSubtaskToggle}

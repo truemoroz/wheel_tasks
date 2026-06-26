@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -14,6 +14,13 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Popover from '@mui/material/Popover';
 import Divider from '@mui/material/Divider';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import Button from '@mui/material/Button';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Typography from '@mui/material/Typography';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
@@ -24,11 +31,14 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import ShortcutIcon from '@mui/icons-material/Shortcut';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import LinkIcon from '@mui/icons-material/Link';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import EditIcon from '@mui/icons-material/Edit';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import { keyframes } from '@emotion/react';
-import { Task } from '@/app/types/todo';
+import { LinkedTaskOption, Task } from '@/app/types/todo';
 
 function getSignificanceColor(sig: number): 'error' | 'warning' | 'success' | 'default' {
   if (sig >= 8) return 'error';
@@ -50,6 +60,7 @@ const CELEBRATION_PARTICLES = [
   { x: -72, y: -8, color: '#ab47bc', size: 7, delay: 360 },
   { x: 76, y: -36, color: '#ef5350', size: 6, delay: 405 },
 ];
+const EMPTY_COLLAPSED_TASK_IDS = new Set<string>();
 
 const taskDonePulse = keyframes`
   0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(102, 187, 106, 0); }
@@ -204,12 +215,16 @@ interface TaskItemProps {
   onDelete: () => void;
   onSignificanceChange?: (taskId: string, significance: number) => void;
   onRecurringToggle?: (taskId: string) => void;
+  onTaskLinksChange?: (taskId: string, linkedTaskIds: string[]) => void;
+  taskLinkOptions?: LinkedTaskOption[];
   onLog?: (groupId: string, taskId: string) => Promise<void>;
   onTitleChange?: (taskId: string, title: string) => void;
   onSubtaskAdd?: (taskId: string, title: string) => void;
   onSubtaskToggle?: (taskId: string, subtaskId: string) => void;
   onSubtaskDelete?: (taskId: string, subtaskId: string) => void;
   showCompletedTasks?: boolean;
+  collapsedTaskIds?: Set<string>;
+  onSubtasksCollapseToggle?: (taskId: string) => void;
 }
 
 export default function TaskItem({
@@ -220,12 +235,16 @@ export default function TaskItem({
   onDelete,
   onSignificanceChange,
   onRecurringToggle,
+  onTaskLinksChange,
+  taskLinkOptions = [],
   onLog,
   onTitleChange,
   onSubtaskAdd,
   onSubtaskToggle,
   onSubtaskDelete,
   showCompletedTasks = true,
+  collapsedTaskIds = EMPTY_COLLAPSED_TASK_IDS,
+  onSubtasksCollapseToggle,
 }: TaskItemProps) {
   const t = useTranslations('TaskItem');
   const recurring = task.recurring ?? false;
@@ -237,6 +256,8 @@ export default function TaskItem({
   const [celebrating, setCelebrating] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [sigAnchor, setSigAnchor] = useState<null | HTMLElement>(null);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [selectedLinkedTaskIds, setSelectedLinkedTaskIds] = useState<string[]>(task.linkedTaskIds ?? []);
   const sigTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const celebrationFrameRef = useRef<number | null>(null);
   const celebrationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -279,7 +300,34 @@ export default function TaskItem({
 
   const subtasks = task.subtasks ?? [];
   const visibleSubtasks = showCompletedTasks ? subtasks : subtasks.filter((subtask) => !subtask.completed);
+  const hasVisibleSubtasks = visibleSubtasks.length > 0;
+  const subtasksCollapsed = collapsedTaskIds.has(task.id);
   const sig = task.significance ?? 5;
+  const linkedTaskIds = useMemo(() => task.linkedTaskIds ?? [], [task.linkedTaskIds]);
+  const availableLinkOptions = useMemo(
+    () => taskLinkOptions.filter((option) => !option.completed && option.sphereId !== groupId && option.taskId !== task.id),
+    [groupId, task.id, taskLinkOptions],
+  );
+  const linkOptionsBySphere = useMemo(() => {
+    const groups: { sphereId: string; sphereName: string; tasks: LinkedTaskOption[] }[] = [];
+
+    for (const option of availableLinkOptions) {
+      let group = groups.find((item) => item.sphereId === option.sphereId);
+      if (!group) {
+        group = { sphereId: option.sphereId, sphereName: option.sphereName, tasks: [] };
+        groups.push(group);
+      }
+      group.tasks.push(option);
+    }
+
+    return groups;
+  }, [availableLinkOptions]);
+  const linkedTasks = useMemo(
+    () => linkedTaskIds
+      .map((linkedId) => taskLinkOptions.find((option) => option.taskId === linkedId))
+      .filter((option): option is LinkedTaskOption => Boolean(option)),
+    [linkedTaskIds, taskLinkOptions],
+  );
 
   const handleAddSubtask = () => {
     if (newSubtask.trim()) {
@@ -336,6 +384,23 @@ export default function TaskItem({
     await onLog?.(groupId, task.id);
     setJustLogged(true);
     setTimeout(() => setJustLogged(false), 1500);
+  };
+
+  const handleOpenLinkDialog = () => {
+    setSelectedLinkedTaskIds(linkedTaskIds);
+    setLinkDialogOpen(true);
+    setMenuAnchor(null);
+  };
+
+  const handleLinkedTaskToggle = (taskId: string) => {
+    setSelectedLinkedTaskIds((prev) =>
+      prev.includes(taskId) ? prev.filter((id) => id !== taskId) : [...prev, taskId],
+    );
+  };
+
+  const handleSaveLinks = () => {
+    onTaskLinksChange?.(task.id, selectedLinkedTaskIds);
+    setLinkDialogOpen(false);
   };
 
   const renderSignificanceControls = (id: string, value: number) => {
@@ -501,6 +566,46 @@ export default function TaskItem({
           />
         )}
 
+        {!editingTitle && hasVisibleSubtasks && (
+          <Tooltip title={subtasksCollapsed ? t('expandSubtasks') : t('collapseSubtasks')}>
+            <IconButton
+              size="small"
+              onClick={() => onSubtasksCollapseToggle?.(task.id)}
+              aria-label={subtasksCollapsed ? t('expandSubtasks') : t('collapseSubtasks')}
+              sx={{ flexShrink: 0, ml: 0.25 }}
+            >
+              {subtasksCollapsed ? <ExpandMoreIcon fontSize="small" /> : <ExpandLessIcon fontSize="small" />}
+            </IconButton>
+          </Tooltip>
+        )}
+
+        {!editingTitle && linkedTasks.length > 0 && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 1, minWidth: 0, ml: 0.75 }}>
+            {linkedTasks.slice(0, 2).map((linkedTask) => (
+              <Tooltip key={linkedTask.taskId} title={`${linkedTask.sphereName}: ${linkedTask.title}`}>
+                <Chip
+                  icon={<LinkIcon sx={{ fontSize: 14 }} />}
+                  label={linkedTask.sphereName}
+                  size="small"
+                  variant="outlined"
+                  sx={{
+                    height: 20,
+                    maxWidth: { xs: 84, sm: 120 },
+                    '& .MuiChip-label': {
+                      px: 0.5,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    },
+                  }}
+                />
+              </Tooltip>
+            ))}
+            {linkedTasks.length > 2 && (
+              <Chip label={`+${linkedTasks.length - 2}`} size="small" variant="outlined" sx={{ height: 20 }} />
+            )}
+          </Box>
+        )}
+
         {/* Right-side actions — fixed width, never shrinks */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0, ml: 0.5 }}>
           <Box sx={{ mr: '20px', display: 'flex', alignItems: 'center' }}>{renderSignificanceControls(task.id, sig)}</Box>
@@ -544,6 +649,12 @@ export default function TaskItem({
               </ListItemIcon>
               {recurring ? t('makeOneTime') : t('makeRecurring')}
             </MenuItem>
+            <MenuItem onClick={handleOpenLinkDialog} disabled={!availableLinkOptions.length}>
+              <ListItemIcon>
+                <LinkIcon fontSize="small" color={linkedTaskIds.length ? 'primary' : 'inherit'} />
+              </ListItemIcon>
+              {t('linkTasks')}
+            </MenuItem>
             <Divider />
             <MenuItem onClick={() => { onDelete(); setMenuAnchor(null); }} sx={{ color: 'error.main' }}>
               <ListItemIcon>
@@ -554,6 +665,57 @@ export default function TaskItem({
           </Menu>
         </Box>
       </ListItem>
+
+      <Dialog open={linkDialogOpen} onClose={() => setLinkDialogOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>{t('linkTasks')}</DialogTitle>
+        <DialogContent dividers>
+          {availableLinkOptions.length ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+              {linkOptionsBySphere.map((sphere) => (
+                <Box key={sphere.sphereId}>
+                  <Typography variant="subtitle2" sx={{ display: 'block', mb: 0.25 }}>
+                    {sphere.sphereName}
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+                    {sphere.tasks.map((option) => (
+                      <FormControlLabel
+                        key={option.taskId}
+                        control={
+                          <Checkbox
+                            checked={selectedLinkedTaskIds.includes(option.taskId)}
+                            onChange={() => handleLinkedTaskToggle(option.taskId)}
+                            size="small"
+                          />
+                        }
+                        label={
+                          <Typography variant="caption" sx={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '20px' }}>
+                            {option.title}
+                          </Typography>
+                        }
+                        sx={{
+                          alignItems: 'center',
+                          minHeight: 28,
+                          mr: 0,
+                          ml: 0,
+                          '& .MuiCheckbox-root': { py: 0.5 },
+                        }}
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              {t('noLinkableTasks')}
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setLinkDialogOpen(false)}>{t('cancelEdit')}</Button>
+          <Button onClick={handleSaveLinks} variant="contained">{t('saveTaskLinks')}</Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Inline add-subtask input */}
       {showAdd && (
@@ -577,7 +739,7 @@ export default function TaskItem({
       )}
 
       {/* Subtasks — rendered recursively */}
-      {visibleSubtasks.map((subtask) => (
+      {!subtasksCollapsed && visibleSubtasks.map((subtask) => (
         <Box
           key={subtask.id}
           sx={{
@@ -594,12 +756,16 @@ export default function TaskItem({
             onDelete={() => onSubtaskDelete?.(task.id, subtask.id)}
             onSignificanceChange={onSignificanceChange}
             onRecurringToggle={onRecurringToggle}
+            onTaskLinksChange={onTaskLinksChange}
+            taskLinkOptions={taskLinkOptions}
             onLog={onLog}
             onTitleChange={onTitleChange}
             onSubtaskAdd={onSubtaskAdd}
             onSubtaskToggle={onSubtaskToggle}
             onSubtaskDelete={onSubtaskDelete}
             showCompletedTasks={showCompletedTasks}
+            collapsedTaskIds={collapsedTaskIds}
+            onSubtasksCollapseToggle={onSubtasksCollapseToggle}
           />
         </Box>
       ))}

@@ -10,6 +10,7 @@ interface LeanTask {
   completed: boolean;
   significance: number;
   recurring: boolean;
+  linkedTaskIds?: string[];
 }
 
 export interface FrontendTask {
@@ -18,6 +19,7 @@ export interface FrontendTask {
   completed: boolean;
   significance: number;
   recurring: boolean;
+  linkedTaskIds: string[];
   subtasks: FrontendTask[];
 }
 
@@ -31,6 +33,7 @@ function buildTaskTree(tasks: LeanTask[], parentId: string | null = null): Front
       completed: t.completed,
       significance: t.significance ?? 5,
       recurring: t.recurring ?? false,
+      linkedTaskIds: t.linkedTaskIds ?? [],
       subtasks: buildTaskTree(tasks, t._id.toString()),
     }));
 }
