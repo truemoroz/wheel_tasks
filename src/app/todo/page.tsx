@@ -1,2 +1,5 @@
-import { redirect } from 'next/navigation';
-export default function Page() { redirect('/en/todo'); }
+import { redirectToPreferredLocale } from '@/app/localeRedirect';
+
+export default async function Page() {
+  await redirectToPreferredLocale('/todo');
+}
