@@ -1,5 +1,6 @@
 import createMiddleware from 'next-intl/middleware';
 import { NextRequest, NextResponse } from 'next/server';
+import { getPreferredLocale } from './i18n/detectLocale';
 import { routing } from './i18n/routing';
 
 const intlMiddleware = createMiddleware(routing);
@@ -26,8 +27,11 @@ export function proxy(req: NextRequest) {
     strippedPath.startsWith('/login') ||
     strippedPath.startsWith('/register');
 
-  // Detect the locale already in the URL (fall back to default)
-  const locale = pathname.match(LOCALES_RE)?.[1] ?? routing.defaultLocale;
+  const locale = getPreferredLocale({
+    pathname,
+    cookieLocale: req.cookies.get('NEXT_LOCALE')?.value,
+    acceptLanguage: req.headers.get('accept-language'),
+  });
 
   if (!isLoggedIn && !isPublic) {
     const loginUrl = new URL(`/${locale}/login`, req.nextUrl.origin);
