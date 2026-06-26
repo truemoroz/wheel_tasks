@@ -19,7 +19,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import { LifeSphereGroup } from '@/app/types/todo';
+import { LifeSphereGroup, LinkedTaskOption } from '@/app/types/todo';
 import SphereGroup from '@/app/components/SphereGroup';
 import WheelOfLife, { ratingToColor } from "@/app/components/WheelOfLife";
 
@@ -63,6 +63,29 @@ function findTaskInTree(tasks: LifeSphereGroup['tasks'], id: string): LifeSphere
     const found = findTaskInTree(t.subtasks ?? [], id);
     if (found) return found;
   }
+}
+
+function collectTaskLinkOptions(spheres: LifeSphereGroup[]): LinkedTaskOption[] {
+  const options: LinkedTaskOption[] = [];
+
+  const collect = (sphere: LifeSphereGroup, tasks: LifeSphereGroup['tasks']) => {
+    for (const task of tasks) {
+      options.push({
+        taskId: task.id,
+        title: task.title,
+        completed: task.completed,
+        sphereId: sphere.id,
+        sphereName: sphere.name,
+      });
+      collect(sphere, task.subtasks ?? []);
+    }
+  };
+
+  for (const sphere of spheres) {
+    collect(sphere, sphere.tasks);
+  }
+
+  return options;
 }
 
 export default function SphereList() {
@@ -123,6 +146,8 @@ export default function SphereList() {
     () => [...spheres].sort((a, b) => sortOrder === 'asc' ? a.rating - b.rating : b.rating - a.rating),
     [spheres, sortOrder],
   );
+
+  const taskLinkOptions = useMemo(() => collectTaskLinkOptions(spheres), [spheres]);
 
   const handleRatingChange = async (id: string, rating: number) => {
     // Optimistic update
@@ -277,6 +302,18 @@ export default function SphereList() {
     }
   };
 
+  const handleTaskLinksChange = async (groupId: string, taskId: string, linkedTaskIds: string[]) => {
+    const res = await fetch(`/api/spheres/${groupId}/tasks/${taskId}/links`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ linkedTaskIds }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setSpheres(updated);
+    }
+  };
+
   const handleTaskLog = async (groupId: string, taskId: string) => {
     await fetch(`/api/spheres/${groupId}/tasks/${taskId}/log`, { method: 'POST' });
     // No sphere state change needed — task stays active
@@ -417,6 +454,8 @@ export default function SphereList() {
     onTaskTitleChange: handleTaskTitleChange,
     onTaskSignificanceChange: handleTaskSignificanceChange,
     onTaskRecurringToggle: handleTaskRecurringToggle,
+    onTaskLinksChange: handleTaskLinksChange,
+    taskLinkOptions,
     onTaskLog: handleTaskLog,
     onGoalAdd: handleGoalAdd,
     onGoalDelete: handleGoalDelete,

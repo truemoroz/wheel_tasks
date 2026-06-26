@@ -60,7 +60,7 @@ export default function AppBarComponent() {
             <Toolbar>
                 <IconButton
                     size="large" edge="start" color="inherit" aria-label="menu"
-                    sx={{ mr: 2 }} onClick={(e) => setMenuAnchor(e.currentTarget)}
+                    sx={{ mr: 0 }} onClick={(e) => setMenuAnchor(e.currentTarget)}
                 >
                     <MenuIcon />
                 </IconButton>

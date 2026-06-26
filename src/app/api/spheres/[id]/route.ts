@@ -44,9 +44,14 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
 
     await connectToDatabase();
     const { id } = await params;
+    const tasks = await Task.find({ sphereId: id, userId: session.user.id }).select('_id').lean();
+    const taskIds = tasks.map((task) => task._id.toString());
     await Sphere.deleteOne({ _id: id, userId: session.user.id });
     // Also delete all tasks belonging to this sphere
     await Task.deleteMany({ sphereId: id, userId: session.user.id });
+    if (taskIds.length) {
+      await Task.updateMany({ userId: session.user.id }, { $pull: { linkedTaskIds: { $in: taskIds } } });
+    }
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('DELETE /api/spheres/[id] error:', error);

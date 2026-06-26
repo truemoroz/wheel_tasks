@@ -10,6 +10,7 @@ export interface ITask extends Document {
   completed: boolean;
   significance: number;
   recurring: boolean;
+  linkedTaskIds: string[];
 }
 
 const TaskSchema = new Schema<ITask>(
@@ -21,6 +22,7 @@ const TaskSchema = new Schema<ITask>(
     completed: { type: Boolean, default: false },
     significance: { type: Number, default: 5, min: 1, max: 10 },
     recurring: { type: Boolean, default: false },
+    linkedTaskIds: { type: [String], default: [] },
   },
   { timestamps: true },
 );
@@ -31,4 +33,3 @@ TaskSchema.index({ parentId: 1 });
 const Task: Model<ITask> = (models.Task as Model<ITask>) || mongoose.model<ITask>('Task', TaskSchema);
 
 export default Task;
-

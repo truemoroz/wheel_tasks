@@ -12,7 +12,7 @@ import IconButton from '@mui/material/IconButton';
 import List from '@mui/material/List';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import { LifeSphereGroup } from '@/app/types/todo';
+import { LifeSphereGroup, LinkedTaskOption } from '@/app/types/todo';
 import AgentChat from '@/app/components/AgentChat';
 import TaskItem from '@/app/components/TaskItem';
 
@@ -24,6 +24,8 @@ interface SphereTasksProps {
   onTaskTitleChange?: (groupId: string, taskId: string, title: string) => void;
   onTaskSignificanceChange?: (groupId: string, taskId: string, significance: number) => void;
   onTaskRecurringToggle?: (groupId: string, taskId: string) => void;
+  onTaskLinksChange?: (groupId: string, taskId: string, linkedTaskIds: string[]) => void;
+  taskLinkOptions?: LinkedTaskOption[];
   onTaskLog?: (groupId: string, taskId: string) => Promise<void>;
   onSubtaskAdd?: (groupId: string, taskId: string, title: string) => void;
   onSubtaskToggle?: (groupId: string, taskId: string, subtaskId: string) => void;
@@ -38,6 +40,8 @@ export default function SphereTasks({
   onTaskTitleChange,
   onTaskSignificanceChange,
   onTaskRecurringToggle,
+  onTaskLinksChange,
+  taskLinkOptions = [],
   onTaskLog,
   onSubtaskAdd,
   onSubtaskToggle,
@@ -47,6 +51,7 @@ export default function SphereTasks({
   const [newTask, setNewTask] = useState('');
   const [agentChatOpen, setAgentChatOpen] = useState(false);
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
+  const [collapsedTaskIds, setCollapsedTaskIds] = useState<Set<string>>(new Set());
 
   const handleAddTask = () => {
     if (newTask.trim()) {
@@ -58,6 +63,18 @@ export default function SphereTasks({
   const visibleTasks = showCompletedTasks
     ? group.tasks
     : group.tasks.filter(task => !task.completed);
+
+  const handleSubtasksCollapseToggle = (taskId: string) => {
+    setCollapsedTaskIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(taskId)) {
+        next.delete(taskId);
+      } else {
+        next.add(taskId);
+      }
+      return next;
+    });
+  };
 
   return (
     <>
@@ -87,11 +104,15 @@ export default function SphereTasks({
             onTitleChange={(taskId, title) => onTaskTitleChange?.(group.id, taskId, title)}
             onSignificanceChange={(taskId, sig) => onTaskSignificanceChange?.(group.id, taskId, sig)}
             onRecurringToggle={(taskId) => onTaskRecurringToggle?.(group.id, taskId)}
+            onTaskLinksChange={(taskId, linkedTaskIds) => onTaskLinksChange?.(group.id, taskId, linkedTaskIds)}
+            taskLinkOptions={taskLinkOptions}
             onLog={onTaskLog}
             onSubtaskAdd={(taskId, title) => onSubtaskAdd?.(group.id, taskId, title)}
             onSubtaskToggle={(taskId, subtaskId) => onSubtaskToggle?.(group.id, taskId, subtaskId)}
             onSubtaskDelete={(taskId, subtaskId) => onSubtaskDelete?.(group.id, taskId, subtaskId)}
             showCompletedTasks={showCompletedTasks}
+            collapsedTaskIds={collapsedTaskIds}
+            onSubtasksCollapseToggle={handleSubtasksCollapseToggle}
           />
         ))}
       </List>
