@@ -73,6 +73,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
     const allTasks = await Task.find({ sphereId: id, userId: session.user.id }).lean();
     const toDelete = collectDescendantIds(allTasks, taskId);
     await Task.deleteMany({ _id: { $in: toDelete }, userId: session.user.id });
+    await Task.updateMany({ userId: session.user.id }, { $pull: { linkedTaskIds: { $in: toDelete } } });
 
     const hydrated = await getHydratedSphere(id, session.user.id);
     return NextResponse.json(hydrated);

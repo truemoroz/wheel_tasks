@@ -122,9 +122,7 @@ function TaskNode({ data }: NodeProps) {
   return (
     <>
       <Handle type="target" position={isLeft ? Position.Right : Position.Left} style={{ opacity: 0 }} />
-      {d.hasChildren && (
-        <Handle type="source" position={isLeft ? Position.Left : Position.Right} style={{ opacity: 0 }} />
-      )}
+      <Handle type="source" position={isLeft ? Position.Left : Position.Right} style={{ opacity: 0 }} />
       <Box
         onClick={d.hasChildren ? () => d.onToggle(d.taskId) : undefined}
         sx={{
@@ -168,6 +166,25 @@ const TASK_BASE_X = 460;
 const TASK_STEP_X = 240;
 const V_GAP = 52;
 
+function filterIncompleteTasks(tasks: Task[]): Task[] {
+  return tasks.flatMap((task) => {
+    const subtasks = filterIncompleteTasks(task.subtasks ?? []);
+
+    if (task.completed) {
+      return subtasks;
+    }
+
+    return [{ ...task, subtasks }];
+  });
+}
+
+function filterSpheresForGraph(spheres: LifeSphereGroup[]): LifeSphereGroup[] {
+  return spheres.map((sphere) => ({
+    ...sphere,
+    tasks: filterIncompleteTasks(sphere.tasks),
+  }));
+}
+
 function countVisibleTaskRows(tasks: Task[], collapsedTasks: Set<string>): number {
   let count = 0;
   for (const t of tasks) {
@@ -177,6 +194,42 @@ function countVisibleTaskRows(tasks: Task[], collapsedTasks: Set<string>): numbe
     }
   }
   return count;
+}
+
+function addLinkedTaskEdges(spheres: LifeSphereGroup[], edges: Edge[], visibleTaskIds: Set<string>) {
+  const addedLinks = new Set<string>();
+
+  const collect = (tasks: Task[]) => {
+    for (const task of tasks) {
+      const linkedTaskIds = task.linkedTaskIds ?? [];
+
+      if (visibleTaskIds.has(task.id)) {
+        for (const linkedTaskId of linkedTaskIds) {
+          if (!visibleTaskIds.has(linkedTaskId)) continue;
+
+          const [firstId, secondId] = [task.id, linkedTaskId].sort();
+          const linkId = `link-${firstId}-${secondId}`;
+          if (addedLinks.has(linkId)) continue;
+
+          edges.push({
+            id: linkId,
+            source: `task-${task.id}`,
+            target: `task-${linkedTaskId}`,
+            type: 'smoothstep',
+            animated: true,
+            style: { strokeWidth: 2, stroke: '#f97316', strokeDasharray: '6 4' },
+          });
+          addedLinks.add(linkId);
+        }
+      }
+
+      collect(task.subtasks ?? []);
+    }
+  };
+
+  for (const sphere of spheres) {
+    collect(sphere.tasks);
+  }
 }
 
 function addTaskNodes(
@@ -250,12 +303,14 @@ function buildGraph(
   onToggleSphere: (id: string) => void,
   onToggleTask: (id: string) => void,
 ): { nodes: Node[]; edges: Edge[] } {
+  const visibleSpheres = filterSpheresForGraph(spheres);
   const nodes: Node[] = [];
   const edges: Edge[] = [];
+  const visibleTaskIds = new Set<string>();
 
-  const half = Math.ceil(spheres.length / 2);
-  const leftSpheres = spheres.slice(0, half);
-  const rightSpheres = spheres.slice(half);
+  const half = Math.ceil(visibleSpheres.length / 2);
+  const leftSpheres = visibleSpheres.slice(0, half);
+  const rightSpheres = visibleSpheres.slice(half);
 
   // Count rows per side independently so each side is centred around root
   const countRows = (list: LifeSphereGroup[]) =>
@@ -312,6 +367,15 @@ function buildGraph(
 
       if (!isCollapsed) {
         addTaskNodes(nodes, edges, sphere.tasks, sphere.id, null, 0, rowCursor, collapsedTasks, onToggleTask, sideHeight, side);
+        for (const task of sphere.tasks) {
+          const collectVisibleIds = (tasks: Task[]) => {
+            for (const item of tasks) {
+              visibleTaskIds.add(item.id);
+              if (!collapsedTasks.has(item.id)) collectVisibleIds(item.subtasks ?? []);
+            }
+          };
+          collectVisibleIds([task]);
+        }
         rowCursor += Math.max(1, taskRows);
       } else {
         rowCursor += 1;
@@ -321,6 +385,7 @@ function buildGraph(
 
   placeSide(leftSpheres, 'left', leftHeight);
   placeSide(rightSpheres, 'right', rightHeight);
+  addLinkedTaskEdges(visibleSpheres, edges, visibleTaskIds);
 
   return { nodes, edges };
 }
@@ -405,4 +470,3 @@ export default function TaskGraph() {
     </Box>
   );
 }
-

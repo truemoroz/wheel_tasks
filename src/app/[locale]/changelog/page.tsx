@@ -17,6 +17,14 @@ export default function ChangelogPage() {
 
   const releases = [
     {
+      version: '1.9',
+      tag: 'feature' as Tag,
+      titleKey: 'v19Title',
+      dateKey: 'v19Date',
+      headingKey: 'v19Heading',
+      bodyKey: 'v19Body',
+    },
+    {
       version: '1.8',
       tag: 'feature' as Tag,
       titleKey: 'v18Title',
@@ -118,4 +126,3 @@ export default function ChangelogPage() {
     </Box>
   );
 }
-
